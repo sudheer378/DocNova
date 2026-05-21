@@ -1,124 +1,178 @@
-/**
- * BrowserTools - Download Engine
- * Centralized download handling with progress, batch support, and filename generation
- */
+/* ========================================
+   DOWNLOAD ENGINE
+   Handles file downloads with progress
+   ======================================== */
 
-const DownloadEngine = {
-  initialized: false,
-  
-  // Initialize
-  async init() {
-    if (this.initialized) return;
-    this.initialized = true;
-    console.log('DownloadEngine initialized');
-  },
-  
-  // Download single file
-  download(data, filename, mimeType = 'application/octet-stream') {
-    const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
+class DownloadEngine {
+  constructor() {
+    this.activeDownloads = new Map();
+  }
+
+  // Download a single file
+  download(filename, blob, onProgress = null) {
     const url = URL.createObjectURL(blob);
+    const downloadId = `dl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    // Cleanup
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-    
-    Toast.success(`Downloaded: ${filename}`);
-  },
-  
-  // Download from Canvas
-  downloadFromCanvas(canvas, filename, format = 'image/jpeg', quality = 0.9) {
-    return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          this.download(blob, filename);
-          resolve(true);
-        } else {
-          Toast.error('Failed to generate image');
-          reject(new Error('Canvas export failed'));
-        }
-      }, format, quality);
+    this.activeDownloads.set(downloadId, {
+      filename,
+      blob,
+      url,
+      startTime: Date.now(),
+      size: blob.size
     });
-  },
-  
-  // Download multiple files (batch)
-  downloadBatch(files, baseFilename) {
-    if (files.length === 1) {
-      this.download(files[0].data, files[0].name || `${baseFilename}.processed`, files[0].mimeType);
-      return;
+
+    return new Promise((resolve, reject) => {
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Report completion
+        if (onProgress && typeof onProgress === 'function') {
+          onProgress(100);
+        }
+
+        // Clean up after delay
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          this.activeDownloads.delete(downloadId);
+        }, 1000);
+
+        resolve({ downloadId, filename, size: blob.size });
+
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        this.activeDownloads.delete(downloadId);
+        reject(error);
+      }
+    });
+  }
+
+  // Download multiple files (triggers each)
+  async downloadMultiple(files, zipName = 'files.zip') {
+    // Note: Actual ZIP creation would require a library like JSZip
+    // For now, download each file sequentially
+    
+    const results = [];
+    
+    for (const file of files) {
+      try {
+        const result = await this.download(file.filename, file.blob);
+        results.push(result);
+        
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error(`Failed to download ${file.filename}:`, error);
+      }
     }
     
-    // Create ZIP for multiple files (client-side would need JSZip library)
-    // For now, download individually with slight delay
-    files.forEach((file, index) => {
-      setTimeout(() => {
-        this.download(file.data, file.name || `${baseFilename}-${index + 1}.processed`, file.mimeType);
-      }, index * 300);
+    return results;
+  }
+
+  // Download image from canvas
+  downloadFromCanvas(canvas, filename, format = 'image/jpeg', quality = 0.9) {
+    return new Promise((resolve, reject) => {
+      try {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            this.download(filename, blob).then(resolve).catch(reject);
+          } else {
+            reject(new Error('Canvas export failed'));
+          }
+        }, format, quality);
+      } catch (error) {
+        reject(error);
+      }
     });
-    
-    Toast.success(`Downloading ${files.length} files...`);
-  },
-  
-  // Generate filename
-  generateFilename(originalName, outputFormat, suffix = '') {
-    const nameParts = originalName.split('.');
-    nameParts.pop(); // Remove extension
-    const baseName = nameParts.join('.');
-    
-    const ext = outputFormat || originalName.split('.').pop();
-    
-    return `${baseName}${suffix}.${ext}`;
-  },
-  
-  // Generate filename with timestamp
-  generateTimestampedFilename(originalName, outputFormat) {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    return this.generateFilename(originalName, outputFormat, `-${timestamp}`);
-  },
-  
-  // Download with progress simulation
-  downloadWithProgress(data, filename, mimeType, onProgress) {
-    return new Promise((resolve) => {
-      // Simulate progress for UX
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        if (onProgress) onProgress(progress);
-        
-        if (progress >= 100) {
-          clearInterval(interval);
-          this.download(data, filename, mimeType);
-          resolve(true);
-        }
-      }, 50);
+  }
+
+  // Download image from data URL
+  downloadFromDataUrl(dataUrl, filename) {
+    return new Promise((resolve, reject) => {
+      try {
+        fetch(dataUrl)
+          .then(res => res.blob())
+          .then(blob => {
+            this.download(filename, blob).then(resolve).catch(reject);
+          })
+          .catch(reject);
+      } catch (error) {
+        reject(error);
+      }
     });
-  },
-  
-  // Download blob URL
-  downloadFromURL(url, filename) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  },
-  
-  // Check download support
-  isDownloadSupported() {
-    return typeof document.createElement('a').download !== 'undefined';
-  },
-  
-  // Get download directory (not available in browser, just informational)
-  getDownloadInfo() {
+  }
+
+  // Get download statistics
+  getStats(downloadId) {
+    const download = this.activeDownloads.get(downloadId);
+    if (!download) return null;
+
     return {
-      supported: this.isDownloadSupported(),
-      note: 'Files are downloaded to your browser\'s default download location'
+      filename: download.filename,
+      size: download.size,
+      formattedSize: this.formatFileSize(download.size),
+      duration: Date.now() - download.startTime
     };
   }
-};
+
+  // Cancel download (limited browser support)
+  cancel(downloadId) {
+    const download = this.activeDownloads.get(downloadId);
+    if (download) {
+      URL.revokeObjectURL(download.url);
+      this.activeDownloads.delete(downloadId);
+      return true;
+    }
+    return false;
+  }
+
+  // Cancel all active downloads
+  cancelAll() {
+    this.activeDownloads.forEach((download, id) => {
+      URL.revokeObjectURL(download.url);
+    });
+    this.activeDownloads.clear();
+  }
+
+  // Format file size
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Generate filename with timestamp
+  generateFilename(baseName, extension) {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const cleanBase = baseName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    return `${cleanBase}_${timestamp}.${extension}`;
+  }
+
+  // Check if download is supported
+  isDownloadSupported() {
+    return typeof document.createElement('a').download !== 'undefined';
+  }
+
+  // Download text content
+  downloadText(content, filename, encoding = 'text/plain') {
+    const blob = new Blob([content], { type: encoding });
+    return this.download(filename, blob);
+  }
+
+  // Download JSON
+  downloadJSON(data, filename, pretty = true) {
+    const content = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+    return this.downloadText(content, filename, 'application/json');
+  }
+}
+
+// Create global download engine instance
+window.downloadEngine = new DownloadEngine();

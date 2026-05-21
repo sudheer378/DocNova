@@ -1,199 +1,243 @@
-/**
- * BrowserTools - Worker Manager
- * Centralized Web Worker management with pooling, reuse, and error recovery
- */
+/* ========================================
+   WORKER MANAGER
+   Handles worker pooling, reuse, and cleanup
+   ======================================== */
 
-const WorkerManager = {
-  initialized: false,
-  
-  // Worker pool
-  workers: {},
-  workerPromises: {},
-  
-  // Queue for pending tasks
-  queue: [],
-  processing: false,
-  
-  // Max concurrent workers
-  maxConcurrent: navigator.hardwareConcurrency ? Math.min(navigator.hardwareConcurrency, 4) : 2,
-  activeWorkers: 0,
-  
-  // Initialize
-  async init() {
-    if (this.initialized) return;
-    this.initialized = true;
-    console.log('WorkerManager initialized');
-  },
-  
-  // Get or create worker
+class WorkerManager {
+  constructor() {
+    this.workers = new Map(); // workerType -> worker instance
+    this.workerQueue = new Map(); // workerType -> queue of pending tasks
+    this.workerBusy = new Map(); // workerType -> boolean
+    this.workerPromises = new Map(); // workerType -> resolve/reject functions
+    
+    this.init();
+  }
+
+  init() {
+    // Initialize worker types from config
+    const config = window.TOOLSAAS_CONFIG;
+    if (config && config.workers) {
+      Object.keys(config.workers).forEach(type => {
+        this.workerQueue.set(type, []);
+        this.workerBusy.set(type, false);
+        this.workerPromises.set(type, null);
+      });
+    }
+  }
+
+  // Get or create a worker
   getWorker(type) {
+    const config = window.TOOLSAAS_CONFIG;
+    if (!config || !config.workers || !config.workers[type]) {
+      throw new Error(`Worker type "${type}" not found in config`);
+    }
+
+    // Create worker if doesn't exist
+    if (!this.workers.has(type)) {
+      try {
+        const workerPath = config.workers[type];
+        const worker = new Worker(workerPath);
+        
+        // Set up message handler
+        worker.onmessage = (e) => this.handleWorkerMessage(type, e);
+        worker.onerror = (e) => this.handleWorkerError(type, e);
+        
+        this.workers.set(type, worker);
+      } catch (error) {
+        console.error(`Failed to create worker ${type}:`, error);
+        throw error;
+      }
+    }
+
+    return this.workers.get(type);
+  }
+
+  // Process a task with a worker
+  async process(type, data, onProgress = null) {
     return new Promise((resolve, reject) => {
-      // Return existing worker if available
-      if (this.workers[type]) {
-        resolve(this.workers[type]);
-        return;
+      try {
+        const worker = this.getWorker(type);
+        
+        // Add progress callback if provided
+        const taskId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Store resolve/reject for this task
+        const callbacks = this.workerPromises.get(type) || {};
+        callbacks[taskId] = { resolve, reject, onProgress };
+        this.workerPromises.set(type, callbacks);
+
+        // Send message to worker
+        worker.postMessage({
+          type: 'process',
+          taskId,
+          data,
+          timestamp: Date.now()
+        });
+
+        // Mark worker as busy
+        this.workerBusy.set(type, true);
+
+      } catch (error) {
+        reject(error);
       }
-      
-      // Check if already creating
-      if (this.workerPromises[type]) {
-        this.workerPromises[type].then(resolve).catch(reject);
-        return;
-      }
-      
-      // Create new worker
-      this.workerPromises[type] = new Promise(async (res, rej) => {
-        try {
-          const workerPath = Config.workers[type];
-          if (!workerPath) {
-            throw new Error(`Unknown worker type: ${type}`);
-          }
-          
-          const worker = new Worker(workerPath);
-          
-          // Setup message handler
-          worker.onmessage = (e) => {
-            const { callbackId, result, error } = e.data;
-            
-            // Resolve callback if exists
-            if (callbackId && this.callbacks[callbackId]) {
-              const callback = this.callbacks[callbackId];
-              delete this.callbacks[callbackId];
-              callback.resolve(result);
-              if (error) callback.reject(error);
-            }
-          };
-          
-          worker.onerror = (e) => {
-            console.error(`Worker error (${type}):`, e);
-            rej(e);
-          };
-          
-          this.workers[type] = worker;
-          res(worker);
-        } catch (e) {
-          rej(e);
-        } finally {
-          delete this.workerPromises[type];
+    });
+  }
+
+  // Handle messages from workers
+  handleWorkerMessage(workerType, event) {
+    const { type, taskId, data, progress, error, result } = event.data;
+
+    const callbacks = this.workerPromises.get(workerType);
+    if (!callbacks || !callbacks[taskId]) {
+      return;
+    }
+
+    const { resolve, reject, onProgress } = callbacks[taskId];
+
+    switch (type) {
+      case 'progress':
+        if (onProgress && typeof progress === 'number') {
+          onProgress(progress);
+        }
+        break;
+
+      case 'complete':
+        // Clean up
+        delete callbacks[taskId];
+        this.workerPromises.set(workerType, callbacks);
+        this.workerBusy.set(workerType, false);
+        
+        // Process next task in queue
+        this.processNextTask(workerType);
+        
+        resolve(result);
+        break;
+
+      case 'error':
+        // Clean up
+        delete callbacks[taskId];
+        this.workerPromises.set(workerType, callbacks);
+        this.workerBusy.set(workerType, false);
+        
+        // Process next task in queue
+        this.processNextTask(workerType);
+        
+        reject(new Error(error || 'Unknown worker error'));
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  // Handle worker errors
+  handleWorkerError(workerType, error) {
+    console.error(`Worker ${workerType} error:`, error);
+    
+    // Terminate and recreate the worker
+    this.terminateWorker(workerType);
+    
+    // Reject any pending promises
+    const callbacks = this.workerPromises.get(workerType);
+    if (callbacks) {
+      Object.keys(callbacks).forEach(taskId => {
+        if (callbacks[taskId].reject) {
+          callbacks[taskId].reject(error);
         }
       });
+      this.workerPromises.set(workerType, {});
+    }
+    
+    this.workerBusy.set(workerType, false);
+  }
+
+  // Process next task in queue
+  processNextTask(workerType) {
+    const queue = this.workerQueue.get(workerType);
+    if (queue && queue.length > 0 && !this.workerBusy.get(workerType)) {
+      const nextTask = queue.shift();
+      this.workerQueue.set(workerType, queue);
       
-      this.workerPromises[type].then(resolve).catch(reject);
-    });
-  },
-  
-  // Callback storage
-  callbacks: {},
-  callbackIdCounter: 0,
-  
-  // Process with worker
-  async process(type, data, onProgress) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const worker = await this.getWorker(type);
+      if (nextTask) {
+        this.process(workerType, nextTask.data, nextTask.onProgress)
+          .then(nextTask.resolve)
+          .catch(nextTask.reject);
+      }
+    }
+  }
+
+  // Queue a task
+  queueTask(type, data, onProgress = null) {
+    return new Promise((resolve, reject) => {
+      const queue = this.workerQueue.get(type);
+      if (queue) {
+        queue.push({ data, onProgress, resolve, reject });
+        this.workerQueue.set(type, queue);
         
-        // Generate callback ID
-        const callbackId = `cb_${++this.callbackIdCounter}`;
-        
-        // Store callback
-        this.callbacks[callbackId] = {
-          resolve: (result) => {
-            if (onProgress) onProgress(100);
-            resolve(result);
-          },
-          reject: (error) => reject(error)
-        };
-        
-        // Send to worker
-        worker.postMessage({
-          type,
-          data,
-          callbackId
-        });
-        
-        // Update progress
-        if (onProgress) {
-          onProgress(10); // Started
+        // Process immediately if worker is idle
+        if (!this.workerBusy.get(type)) {
+          this.processNextTask(type);
         }
-        
-      } catch (e) {
-        // Fallback to main thread processing
-        console.warn('Worker failed, using fallback:', e);
-        try {
-          const result = await this.fallbackProcess(type, data, onProgress);
-          resolve(result);
-        } catch (fallbackError) {
-          reject(fallbackError);
-        }
+      } else {
+        reject(new Error(`Worker type "${type}" not initialized`));
       }
     });
-  },
-  
-  // Fallback processing (main thread)
-  async fallbackProcess(type, data, onProgress) {
-    console.log('Fallback processing for:', type);
-    
-    // Import worker script and execute in main thread
-    // This is a simplified fallback - real implementation would need to import scripts
-    return { 
-      success: false, 
-      error: 'Worker not available, please try again' 
-    };
-  },
-  
-  // Queue task
-  queueTask(type, data, onProgress) {
-    return new Promise((resolve, reject) => {
-      this.queue.push({ type, data, onProgress, resolve, reject });
-      this.processQueue();
-    });
-  },
-  
-  // Process queue
-  async processQueue() {
-    if (this.processing || this.queue.length === 0) return;
-    if (this.activeWorkers >= this.maxConcurrent) return;
-    
-    this.processing = true;
-    
-    while (this.queue.length > 0 && this.activeWorkers < this.maxConcurrent) {
-      const task = this.queue.shift();
-      this.activeWorkers++;
-      
-      this.process(task.type, task.data, task.onProgress)
-        .then(task.resolve)
-        .catch(task.reject)
-        .finally(() => {
-          this.activeWorkers--;
-          this.processQueue();
-        });
+  }
+
+  // Terminate a specific worker
+  terminateWorker(type) {
+    const worker = this.workers.get(type);
+    if (worker) {
+      worker.terminate();
+      this.workers.delete(type);
     }
-    
-    this.processing = false;
-  },
-  
-  // Terminate specific worker
-  terminate(type) {
-    if (this.workers[type]) {
-      this.workers[type].terminate();
-      delete this.workers[type];
-    }
-  },
-  
+  }
+
   // Terminate all workers
   terminateAll() {
-    Object.keys(this.workers).forEach(type => this.terminate(type));
-    this.callbacks = {};
-    this.queue = [];
-    this.activeWorkers = 0;
-  },
-  
-  // Get stats
-  getStats() {
-    return {
-      activeWorkers: this.activeWorkers,
-      queuedTasks: this.queue.length,
-      maxConcurrent: this.maxConcurrent,
-      availableWorkers: Object.keys(this.workers).length
-    };
+    this.workers.forEach((worker, type) => {
+      worker.terminate();
+    });
+    this.workers.clear();
+    
+    this.workerBusy.clear();
+    this.workerQueue.clear();
+    this.workerPromises.clear();
   }
-};
+
+  // Get worker status
+  getStatus() {
+    const status = {};
+    this.workers.forEach((worker, type) => {
+      status[type] = {
+        exists: true,
+        busy: this.workerBusy.get(type) || false,
+        queueLength: (this.workerQueue.get(type) || []).length
+      };
+    });
+    return status;
+  }
+
+  // Check if worker is available
+  isAvailable(type) {
+    return !this.workerBusy.get(type);
+  }
+
+  // Cancel a specific task
+  cancelTask(type, taskId) {
+    const callbacks = this.workerPromises.get(type);
+    if (callbacks && callbacks[taskId]) {
+      delete callbacks[taskId];
+      this.workerPromises.set(type, callbacks);
+      
+      // Notify worker to cancel
+      const worker = this.workers.get(type);
+      if (worker) {
+        worker.postMessage({ type: 'cancel', taskId });
+      }
+    }
+  }
+}
+
+// Create global worker manager instance
+window.workerManager = new WorkerManager();

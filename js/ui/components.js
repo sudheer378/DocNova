@@ -1,264 +1,362 @@
-/**
- * BrowserTools - UI Components
- * Toast, Modal, and Loader systems
- */
+/* ========================================
+   UI COMPONENTS
+   Toast, Modal, Loader systems
+   ======================================== */
 
-// ============================================
-// TOAST NOTIFICATIONS
-// ============================================
+/* ========== TOAST NOTIFICATIONS ========== */
 
-const Toast = {
-  container: null,
-  
-  async init() {
-    return new Promise((resolve) => {
-      this.container = document.getElementById('toastContainer');
-      
-      if (!this.container) {
-        this.container = document.createElement('div');
-        this.container.id = 'toastContainer';
-        this.container.className = 'toast-container fixed bottom-4 right-4 z-50 flex flex-col gap-2';
-        document.body.appendChild(this.container);
-      }
-      
-      resolve();
-    });
-  },
-  
-  show(message, type = 'success', duration = 3000) {
-    if (!this.container) this.init();
+class Toast {
+  constructor(options = {}) {
+    this.options = {
+      position: 'top-right', // top-right, top-center, top-left, bottom-right, bottom-center, bottom-left
+      duration: 3000,
+      maxToasts: 5,
+      ...options
+    };
+
+    this.container = null;
+    this.toasts = [];
+    this.init();
+  }
+
+  init() {
+    // Create container if doesn't exist
+    let container = document.getElementById('toast-container');
     
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type} animate-slide-in-right`;
-    toast.style.cssText = `
-      background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#F59E0B'};
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 280px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      animation: slideInRight 0.3s ease-out;
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.className = `toast-container toast-${this.options.position}`;
+      document.body.appendChild(container);
+    }
+    
+    this.container = container;
+  }
+
+  show(message, type = 'info', options = {}) {
+    const toast = {
+      id: `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      message,
+      type,
+      duration: options.duration || this.options.duration,
+      dismissible: options.dismissible !== false,
+      action: options.action || null,
+      createdAt: Date.now()
+    };
+
+    // Remove oldest toasts if exceeding max
+    while (this.toasts.length >= this.options.maxToasts) {
+      this.remove(this.toasts[0].id);
+    }
+
+    this.toasts.push(toast);
+    this.render(toast);
+
+    // Auto-dismiss
+    if (toast.duration > 0) {
+      setTimeout(() => {
+        this.remove(toast.id);
+      }, toast.duration);
+    }
+
+    return toast.id;
+  }
+
+  success(message, options = {}) {
+    return this.show(message, 'success', options);
+  }
+
+  error(message, options = {}) {
+    return this.show(message, 'error', options);
+  }
+
+  warning(message, options = {}) {
+    return this.show(message, 'warning', options);
+  }
+
+  info(message, options = {}) {
+    return this.show(message, 'info', options);
+  }
+
+  render(toast) {
+    const element = document.createElement('div');
+    element.className = `toast toast-${toast.type}`;
+    element.dataset.toastId = toast.id;
+    element.innerHTML = `
+      <div class="toast-icon">${this.getIcon(toast.type)}</div>
+      <div class="toast-content">
+        <div class="toast-message">${toast.message}</div>
+        ${toast.action ? `<button class="toast-action">${toast.action.label}</button>` : ''}
+      </div>
+      ${toast.dismissible ? `<button class="toast-close" onclick="window.toastSystem.remove('${toast.id}')">&times;</button>` : ''}
     `;
-    
+
+    // Add click handler for action
+    if (toast.action && toast.action.onClick) {
+      const actionBtn = element.querySelector('.toast-action');
+      actionBtn.addEventListener('click', () => {
+        toast.action.onClick();
+        this.remove(toast.id);
+      });
+    }
+
+    this.container.appendChild(element);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      element.classList.add('toast-enter');
+    });
+  }
+
+  getIcon(type) {
     const icons = {
       success: '✓',
       error: '✕',
       warning: '⚠',
       info: 'ℹ'
     };
-    
-    toast.innerHTML = `
-      <span style="font-size: 18px;">${icons[type] || icons.info}</span>
-      <span style="flex: 1;">${message}</span>
-      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;cursor:pointer;font-size:16px;">×</button>
-    `;
-    
-    this.container.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
-  },
-  
-  success(message) { this.show(message, 'success'); },
-  error(message) { this.show(message, 'error'); },
-  warning(message) { this.show(message, 'warning'); },
-  info(message) { this.show(message, 'info'); }
-};
+    return icons[type] || icons.info;
+  }
 
-// ============================================
-// MODAL SYSTEM
-// ============================================
+  remove(id) {
+    const index = this.toasts.findIndex(t => t.id === id);
+    if (index === -1) return;
 
-const Modal = {
-  currentModal: null,
-  
-  create(options = {}) {
-    const {
-      title = '',
-      content = '',
-      showClose = true,
-      onClose = null
-    } = options;
-    
+    const element = this.container.querySelector(`[data-toast-id="${id}"]`);
+    if (element) {
+      element.classList.remove('toast-enter');
+      element.classList.add('toast-exit');
+      
+      setTimeout(() => {
+        element.remove();
+      }, 300);
+    }
+
+    this.toasts.splice(index, 1);
+  }
+
+  clear() {
+    this.toasts.forEach(toast => this.remove(toast.id));
+  }
+}
+
+/* ========== MODAL SYSTEM ========== */
+
+class Modal {
+  constructor() {
+    this.activeModal = null;
+    this.overlay = null;
+    this.init();
+  }
+
+  init() {
+    // Create overlay
+    this.overlay = document.createElement('div');
+    this.overlay.className = 'modal-overlay hidden';
+    this.overlay.addEventListener('click', (e) => {
+      if (e.target === this.overlay && this.activeModal?.closable) {
+        this.close();
+      }
+    });
+
+    // Keyboard escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.activeModal?.closable) {
+        this.close();
+      }
+    });
+
+    document.body.appendChild(this.overlay);
+  }
+
+  open(content, options = {}) {
+    this.activeModal = {
+      content,
+      closable: options.closable !== false,
+      onClose: options.onClose || null
+    };
+
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm';
-    modal.style.cssText = 'animation: fadeIn 0.2s ease-out;';
-    
+    modal.className = 'modal';
     modal.innerHTML = `
-      <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-auto animate-scale-in">
-        ${title ? `
-          <div class="modal-header px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${title}</h3>
-            ${showClose ? `<button class="modal-close text-gray-400 hover:text-gray-600" onclick="Modal.close()">×</button>` : ''}
-          </div>
-        ` : ''}
-        <div class="modal-body p-6">
-          ${typeof content === 'string' ? content : ''}
-        </div>
-        ${options.footer ? `
-          <div class="modal-footer px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            ${options.footer}
-          </div>
-        ` : ''}
+      <div class="modal-content ${options.size || 'medium'}">
+        ${typeof content === 'string' ? content : content.outerHTML}
+        ${options.closable !== false ? '<button class="modal-close">&times;</button>' : ''}
       </div>
     `;
-    
-    // Close on overlay click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) this.close();
-    });
-    
-    // ESC to close
-    const escHandler = (e) => {
-      if (e.key === 'Escape') this.close();
-      document.removeEventListener('keydown', escHandler);
-    };
-    document.addEventListener('keydown', escHandler);
-    
-    document.body.appendChild(modal);
-    this.currentModal = modal;
-    
-    if (options.onOpen) options.onOpen(modal);
-    
-    return modal;
-  },
-  
-  close() {
-    if (!this.currentModal) return;
-    
-    const modal = this.currentModal;
-    modal.style.opacity = '0';
-    modal.style.transition = 'opacity 0.2s ease-out';
-    
-    setTimeout(() => {
-      modal.remove();
-      this.currentModal = null;
-    }, 200);
-  },
-  
-  confirm(options = {}) {
-    return new Promise((resolve) => {
-      const modal = this.create({
-        title: options.title || 'Confirm',
-        content: options.message || 'Are you sure?',
-        footer: `
-          <div class="flex gap-3 justify-end">
-            <button class="btn btn-secondary" onclick="Modal.resolveConfirm(false)">Cancel</button>
-            <button class="btn btn-primary" onclick="Modal.resolveConfirm(true)">Confirm</button>
-          </div>
-        `,
-        onOpen: () => {
-          this.confirmResolve = resolve;
-        }
-      });
-    });
-  },
-  
-  resolveConfirm(value) {
-    if (this.confirmResolve) {
-      this.confirmResolve(value);
-      this.confirmResolve = null;
-      this.close();
+
+    // Add close button handler
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.close());
+    }
+
+    this.overlay.innerHTML = '';
+    this.overlay.appendChild(modal);
+    this.overlay.classList.remove('hidden');
+
+    // Focus trap
+    const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
     }
   }
-};
 
-// ============================================
-// LOADER SYSTEM
-// ============================================
+  close() {
+    if (!this.activeModal) return;
 
-const Loader = {
-  show(containerId, options = {}) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+    this.overlay.classList.add('hidden');
     
-    const {
-      message = 'Processing...',
-      size = 'md'
-    } = options;
-    
-    const sizeClasses = {
-      sm: 'w-4 h-4',
-      md: 'w-8 h-8',
-      lg: 'w-12 h-12'
-    };
-    
-    container.innerHTML = `
-      <div class="loader-container flex flex-col items-center justify-center py-8">
-        <div class="spinner ${sizeClasses[size]} animate-spin rounded-full border-4 border-gray-200 border-t-purple-600"></div>
-        ${message ? `<p class="mt-4 text-gray-600 dark:text-gray-300">${message}</p>` : ''}
-      </div>
-    `;
-  },
-  
-  hide(containerId) {
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.innerHTML = '';
-    }
-  },
-  
-  inline(containerId, show = true) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    if (show) {
-      container.innerHTML = `
-        <div class="inline-loader flex items-center gap-2">
-          <div class="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-purple-600"></div>
-          <span>Loading...</span>
+    const onClose = this.activeModal.onClose;
+    this.activeModal = null;
+
+    setTimeout(() => {
+      this.overlay.innerHTML = '';
+      if (onClose) onClose();
+    }, 300);
+  }
+
+  confirm(message, options = {}) {
+    return new Promise((resolve) => {
+      const content = `
+        <div class="modal-confirm">
+          <h3>${options.title || 'Confirm'}</h3>
+          <p>${message}</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" id="modal-cancel">${options.cancelText || 'Cancel'}</button>
+            <button class="btn btn-primary" id="modal-confirm">${options.confirmText || 'Confirm'}</button>
+          </div>
         </div>
       `;
+
+      this.open(content, { size: 'small' });
+
+      document.getElementById('modal-cancel').addEventListener('click', () => {
+        this.close();
+        resolve(false);
+      });
+
+      document.getElementById('modal-confirm').addEventListener('click', () => {
+        this.close();
+        resolve(true);
+      });
+    });
+  }
+
+  alert(message, options = {}) {
+    return new Promise((resolve) => {
+      const content = `
+        <div class="modal-alert">
+          <h3>${options.title || 'Alert'}</h3>
+          <p>${message}</p>
+          <div class="modal-actions">
+            <button class="btn btn-primary" id="modal-ok">${options.okText || 'OK'}</button>
+          </div>
+        </div>
+      `;
+
+      this.open(content, { size: 'small' });
+
+      document.getElementById('modal-ok').addEventListener('click', () => {
+        this.close();
+        resolve();
+      });
+    });
+  }
+}
+
+/* ========== LOADER SYSTEM ========== */
+
+class Loader {
+  constructor() {
+    this.activeLoaders = new Map();
+  }
+
+  show(target, options = {}) {
+    const loaderId = `loader_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const loader = document.createElement('div');
+    loader.className = 'loader-overlay';
+    loader.dataset.loaderId = loaderId;
+    loader.innerHTML = `
+      <div class="loader ${options.style || 'spinner'}">
+        ${this.getLoaderContent(options.style)}
+      </div>
+      ${options.text ? `<div class="loader-text">${options.text}</div>` : ''}
+    `;
+
+    if (target === 'body') {
+      document.body.appendChild(loader);
     } else {
-      container.innerHTML = '';
+      const targetEl = typeof target === 'string' ? document.querySelector(target) : target;
+      if (targetEl) {
+        targetEl.style.position = 'relative';
+        targetEl.appendChild(loader);
+      }
+    }
+
+    this.activeLoaders.set(loaderId, { element: loader, target });
+    return loaderId;
+  }
+
+  hide(loaderId) {
+    const loader = this.activeLoaders.get(loaderId);
+    if (loader) {
+      loader.element.remove();
+      this.activeLoaders.delete(loaderId);
     }
   }
-};
 
-// ============================================
-// ANIMATIONS (CSS injected)
-// ============================================
-
-const UIAnimations = {
-  init() {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
-      @keyframes scaleIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-      }
-      
-      @keyframes slideInRight {
-        from { opacity: 0; transform: translateX(100%); }
-        to { opacity: 1; transform: translateX(0); }
-      }
-      
-      @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      
-      .animate-fade-in { animation: fadeIn 0.2s ease-out; }
-      .animate-scale-in { animation: scaleIn 0.2s ease-out; }
-      .animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
-      .animate-slide-up { animation: slideUp 0.3s ease-out; }
-    `;
-    document.head.appendChild(style);
+  hideAll() {
+    this.activeLoaders.forEach((loader, id) => {
+      loader.element.remove();
+    });
+    this.activeLoaders.clear();
   }
-};
 
-// Initialize animations on load
-if (typeof document !== 'undefined') {
-  UIAnimations.init();
+  getLoaderContent(style) {
+    switch (style) {
+      case 'dots':
+        return `
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+        `;
+      case 'bar':
+        return `
+          <div class="loader-bar"></div>
+        `;
+      case 'pulse':
+        return `
+          <div class="loader-pulse"></div>
+        `;
+      default: // spinner
+        return `
+          <div class="spinner"></div>
+        `;
+    }
+  }
+
+  // Static convenience methods
+  static show(target, options) {
+    return window.loaderSystem.show(target, options);
+  }
+
+  static hide(loaderId) {
+    return window.loaderSystem.hide(loaderId);
+  }
 }
+
+// Create global instances
+window.toastSystem = new Toast();
+window.modalSystem = new Modal();
+window.loaderSystem = new Loader();
+
+// Convenience aliases
+window.toast = window.toastSystem.show.bind(window.toastSystem);
+window.toast.success = window.toastSystem.success.bind(window.toastSystem);
+window.toast.error = window.toastSystem.error.bind(window.toastSystem);
+window.toast.warning = window.toastSystem.warning.bind(window.toastSystem);
+window.toast.info = window.toastSystem.info.bind(window.toastSystem);
+window.modal = window.modalSystem;
+window.loader = window.loaderSystem;

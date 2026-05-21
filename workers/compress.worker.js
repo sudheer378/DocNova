@@ -1,257 +1,176 @@
-/**
- * BrowserTools - Image Compression/Conversion Worker
- * Handles image compression, format conversion, and size-targeted compression
- */
+/* ========================================
+   COMPRESS WORKER
+   Image compression using Canvas API
+   ======================================== */
 
-self.onmessage = function(e) {
-  const { type, data, callbackId } = e.data;
-  
-  try {
-    if (type === 'compress') {
-      handleCompress(data, callbackId);
-    } else if (type === 'convert') {
-      handleConvert(data, callbackId);
-    } else if (type === 'resize') {
-      handleResize(data, callbackId);
+let ctx = null;
+let canvas = null;
+
+// Initialize OffscreenCanvas for better performance
+function initCanvas() {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    canvas = new OffscreenCanvas(1, 1);
+    ctx = canvas.getContext('2d');
+  }
+}
+
+initCanvas();
+
+self.onmessage = async function(e) {
+  const { type, taskId, data } = e.data;
+
+  if (type === 'process') {
+    try {
+      const result = await processCompression(data);
+      self.postMessage({
+        type: 'complete',
+        taskId,
+        result
+      });
+    } catch (error) {
+      self.postMessage({
+        type: 'error',
+        taskId,
+        error: error.message
+      });
     }
-  } catch (error) {
-    self.postMessage({ callbackId, error: error.message });
   }
 };
 
-// Handle compression
-function handleCompress(data, callbackId) {
-  const { files, filenames, settings } = data;
-  const { quality = 0.8, format = 'jpeg', targetSizeKB = null } = settings;
-  
-  const results = [];
-  
-  // Process first file (single file processing)
-  if (files && files.length > 0) {
-    const imageData = files[0];
-    const originalName = filenames[0];
-    
-    // Create image from data
-    const img = new Image();
-    img.onload = () => {
-      const outputFormat = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
-      const extension = format === 'png' ? 'png' : format === 'webp' ? 'webp' : 'jpg';
-      
-      // Calculate dimensions
-      let width = img.width;
-      let height = img.height;
-      
-      // Create canvas
-      const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext('2d');
-      
-      // For JPEG, fill white background
-      if (outputFormat === 'image/jpeg') {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
-      }
-      
-      ctx.drawImage(img, 0, 0);
-      
-      // Compression logic
-      let currentQuality = quality;
-      let blob;
-      
-      if (targetSizeKB) {
-        // Iterative compression to reach target size
-        const targetBytes = targetSizeKB * 1024;
-        
-        while (currentQuality > 0.05) {
-          blob = canvas.convertToBlob({
-            type: outputFormat,
-            quality: currentQuality
-          });
-          
-          if (blob.size <= targetBytes) break;
-          currentQuality -= 0.05;
-        }
-        
-        // If still too large, reduce dimensions
-        if (blob.size > targetBytes) {
-          let scale = 0.9;
-          while (scale > 0.1 && blob.size > targetBytes) {
-            const newWidth = Math.floor(width * scale);
-            const newHeight = Math.floor(height * scale);
-            
-            const smallCanvas = new OffscreenCanvas(newWidth, newHeight);
-            const smallCtx = smallCanvas.getContext('2d');
-            
-            if (outputFormat === 'image/jpeg') {
-              smallCtx.fillStyle = '#FFFFFF';
-              smallCtx.fillRect(0, 0, newWidth, newHeight);
-            }
-            
-            smallCtx.drawImage(img, 0, 0, newWidth, newHeight);
-            
-            blob = smallCanvas.convertToBlob({
-              type: outputFormat,
-              quality: currentQuality
-            });
-            
-            scale -= 0.1;
-          }
-        }
-      } else {
-        // Standard compression
-        blob = canvas.convertToBlob({
-          type: outputFormat,
-          quality: currentQuality
-        });
-      }
-      
-      // Convert blob to ArrayBuffer
-      blob.arrayBuffer().then(buffer => {
-        const baseName = originalName.substring(0, originalName.lastIndexOf('.'));
-        
-        self.postMessage({
-          callbackId,
-          result: {
-            success: true,
-            files: [{
-              data: buffer,
-              name: `${baseName}-compressed.${extension}`,
-              size: buffer.byteLength,
-              mimeType: outputFormat
-            }]
-          }
-        });
-      });
-    };
-    
-    img.onerror = () => {
-      self.postMessage({
-        callbackId,
-        result: { success: false, error: 'Failed to load image' }
-      });
-    };
-    
-    // Load image
-    const blob = new Blob([imageData], { type: 'image/*' });
-    img.src = URL.createObjectURL(blob);
+async function processCompression(data) {
+  const { files, settings } = data;
+  const { quality = 0.8, maxWidth = null, maxHeight = null, format = 'image/jpeg', targetSizeKB = null } = settings;
+
+  if (!files || files.length === 0) {
+    throw new Error('No files provided');
   }
+
+  const file = files[0];
+  
+  // If target size specified, use iterative compression
+  if (targetSizeKB) {
+    return compressToTargetSize(file, targetSizeKB, format);
+  }
+
+  const originalSize = file.data.byteLength;
+
+  // Create image from ArrayBuffer
+  const blob = new Blob([file.data], { type: file.type });
+  const img = await createImageBitmap(blob);
+
+  // Calculate dimensions
+  let width = img.width;
+  let height = img.height;
+
+  if (maxWidth && width > maxWidth) {
+    height = Math.round(height * maxWidth / width);
+    width = maxWidth;
+  }
+
+  if (maxHeight && height > maxHeight) {
+    width = Math.round(width * maxHeight / height);
+    height = maxHeight;
+  }
+
+  // Create canvas and draw
+  const offCanvas = new OffscreenCanvas(width, height);
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.imageSmoothingEnabled = true;
+  offCtx.imageSmoothingQuality = 'high';
+  offCtx.drawImage(img, 0, 0, width, height);
+
+  // Compress with quality setting
+  const compressedBlob = await offCanvas.convertToBlob({
+    type: format,
+    quality: quality
+  });
+
+  const compressedSize = compressedBlob.size;
+  const compressionRatio = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+
+  // Convert blob to ArrayBuffer for transfer
+  const arrayBuffer = await compressedBlob.arrayBuffer();
+
+  return {
+    success: true,
+    data: arrayBuffer,
+    blobType: format,
+    filename: generateFilename(file.name, format),
+    originalSize,
+    compressedSize,
+    compressionRatio,
+    width,
+    height,
+    format
+  };
 }
 
-// Handle format conversion
-function handleConvert(data, callbackId) {
-  const { files, filenames, settings } = data;
-  const { targetFormat = 'png' } = settings;
-  
-  if (files && files.length > 0) {
-    const imageData = files[0];
-    const originalName = filenames[0];
-    
-    const img = new Image();
-    img.onload = () => {
-      const outputFormat = targetFormat === 'png' ? 'image/png' : 
-                          targetFormat === 'webp' ? 'image/webp' : 'image/jpeg';
-      const extension = targetFormat;
-      
-      const canvas = new OffscreenCanvas(img.width, img.height);
-      const ctx = canvas.getContext('2d');
-      
-      if (outputFormat === 'image/jpeg') {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, img.width, img.height);
-      }
-      
-      ctx.drawImage(img, 0, 0);
-      
-      canvas.convertToBlob({ type: outputFormat, quality: 0.95 }).then(blob => {
-        blob.arrayBuffer().then(buffer => {
-          const baseName = originalName.substring(0, originalName.lastIndexOf('.'));
-          
-          self.postMessage({
-            callbackId,
-            result: {
-              success: true,
-              files: [{
-                data: buffer,
-                name: `${baseName}.${extension}`,
-                size: buffer.byteLength,
-                mimeType: outputFormat
-              }]
-            }
-          });
-        });
-      });
-    };
-    
-    img.onerror = () => {
-      self.postMessage({
-        callbackId,
-        result: { success: false, error: 'Failed to load image' }
-      });
-    };
-    
-    const blob = new Blob([imageData], { type: 'image/*' });
-    img.src = URL.createObjectURL(blob);
+// Iterative compression to reach target size
+async function compressToTargetSize(file, targetSizeKB, format = 'image/jpeg') {
+  const targetSize = targetSizeKB * 1024;
+  const originalSize = file.data.byteLength;
+
+  const blob = new Blob([file.data], { type: file.type });
+  const img = await createImageBitmap(blob);
+
+  let width = img.width;
+  let height = img.height;
+  let quality = 0.95;
+  let attempts = 0;
+  const maxAttempts = 20;
+
+  let currentBlob = null;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+
+    // Create canvas
+    const offCanvas = new OffscreenCanvas(width, height);
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.imageSmoothingEnabled = true;
+    offCtx.imageSmoothingQuality = 'high';
+    offCtx.drawImage(img, 0, 0, width, height);
+
+    currentBlob = await offCanvas.convertToBlob({
+      type: format,
+      quality: quality
+    });
+
+    if (currentBlob.size <= targetSize || quality <= 0.1) {
+      break;
+    }
+
+    // Reduce quality
+    quality -= 0.05;
+
+    // If quality is too low, reduce dimensions
+    if (quality < 0.3 && currentBlob.size > targetSize) {
+      width = Math.round(width * 0.9);
+      height = Math.round(height * 0.9);
+      quality = 0.6;
+    }
   }
+
+  const arrayBuffer = await currentBlob.arrayBuffer();
+
+  return {
+    success: true,
+    data: arrayBuffer,
+    blobType: format,
+    filename: generateFilename(file.name, format),
+    originalSize,
+    compressedSize: currentBlob.size,
+    compressionRatio: ((originalSize - currentBlob.size) / originalSize * 100).toFixed(1),
+    width,
+    height,
+    format,
+    finalQuality: quality
+  };
 }
 
-// Handle resize
-function handleResize(data, callbackId) {
-  const { files, filenames, settings } = data;
-  const { width: targetWidth, height: targetHeight, maintainAspectRatio = true } = settings;
-  
-  if (files && files.length > 0) {
-    const imageData = files[0];
-    const originalName = filenames[0];
-    
-    const img = new Image();
-    img.onload = () => {
-      let width = targetWidth || img.width;
-      let height = targetHeight || img.height;
-      
-      if (maintainAspectRatio) {
-        if (targetWidth && !targetHeight) {
-          height = Math.round((img.height / img.width) * targetWidth);
-        } else if (!targetWidth && targetHeight) {
-          width = Math.round((img.width / img.height) * targetHeight);
-        } else if (targetWidth && targetHeight) {
-          // Maintain aspect ratio fitting within bounds
-          const ratio = Math.min(targetWidth / img.width, targetHeight / img.height);
-          width = Math.round(img.width * ratio);
-          height = Math.round(img.height * ratio);
-        }
-      }
-      
-      const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      canvas.convertToBlob({ type: 'image/jpeg', quality: 0.9 }).then(blob => {
-        blob.arrayBuffer().then(buffer => {
-          const baseName = originalName.substring(0, originalName.lastIndexOf('.'));
-          
-          self.postMessage({
-            callbackId,
-            result: {
-              success: true,
-              files: [{
-                data: buffer,
-                name: `${baseName}-${width}x${height}.jpg`,
-                size: buffer.byteLength,
-                mimeType: 'image/jpeg'
-              }]
-            }
-          });
-        });
-      });
-    };
-    
-    img.onerror = () => {
-      self.postMessage({
-        callbackId,
-        result: { success: false, error: 'Failed to load image' }
-      });
-    };
-    
-    const blob = new Blob([imageData], { type: 'image/*' });
-    img.src = URL.createObjectURL(blob);
-  }
+function generateFilename(originalName, format) {
+  const ext = format.split('/')[1] || 'jpg';
+  const baseName = originalName.replace(/\.[^/.]+$/, '');
+  const timestamp = Date.now();
+  return `${baseName}_compressed_${timestamp}.${ext}`;
 }

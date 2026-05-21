@@ -1,310 +1,355 @@
-/**
- * BrowserTools - Internal Linking Engine
- * Automatic related tools, category links, and guide links generation
- */
+/* ========================================
+   INTERNAL LINKS ENGINE
+   Generate related tools, guides, breadcrumbs
+   ======================================== */
 
-const InternalLinks = {
-  // Tool relationships database
-  toolRelations: {
-    'compress-image': ['resize-image', 'jpg-to-png', 'compress-image-to-20kb', 'webp-to-jpg'],
-    'compress-image-to-20kb': ['compress-image', 'compress-image-to-50kb', 'compress-image-to-100kb'],
-    'compress-image-to-50kb': ['compress-image-to-20kb', 'compress-image-to-100kb', 'compress-image'],
-    'compress-image-to-100kb': ['compress-image-to-50kb', 'compress-image-to-20kb', 'compress-image'],
-    'jpg-to-png': ['png-to-jpg', 'webp-to-jpg', 'convert-pdf-to-jpg'],
-    'png-to-jpg': ['jpg-to-png', 'webp-to-jpg', 'convert-pdf-to-jpg'],
-    'webp-to-jpg': ['jpg-to-png', 'png-to-jpg', 'jpg-to-webp'],
-    'resize-image': ['crop-image', 'compress-image', 'image-upscaler'],
-    'crop-image': ['resize-image', 'compress-image', 'remove-background'],
-    'remove-background': ['compress-image', 'jpg-to-png', 'resize-image'],
-    'image-upscaler': ['resize-image', 'compress-image', 'enhance-image'],
-    'merge-pdf': ['split-pdf', 'compress-pdf', 'pdf-to-jpg', 'jpg-to-pdf'],
-    'split-pdf': ['merge-pdf', 'extract-pages', 'compress-pdf'],
-    'compress-pdf': ['merge-pdf', 'split-pdf', 'pdf-to-jpg'],
-    'pdf-to-jpg': ['jpg-to-pdf', 'pdf-to-png', 'extract-pages'],
-    'jpg-to-pdf': ['pdf-to-jpg', 'merge-pdf', 'png-to-pdf'],
-    'rotate-pdf': ['merge-pdf', 'split-pdf', 'compress-pdf'],
-    'watermark-pdf': ['merge-pdf', 'compress-pdf', 'unlock-pdf'],
-    'extract-pages': ['split-pdf', 'merge-pdf', 'pdf-to-jpg'],
-    'unlock-pdf': ['compress-pdf', 'merge-pdf', 'split-pdf'],
-    'youtube-thumbnail-maker': ['resize-image', 'instagram-post-resizer', 'facebook-cover-resizer'],
-    'instagram-post-resizer': ['youtube-thumbnail-maker', 'facebook-cover-resizer', 'resize-image'],
-    'facebook-cover-resizer': ['youtube-thumbnail-maker', 'instagram-post-resizer', 'resize-image'],
-    'whatsapp-dp-resizer': ['instagram-post-resizer', 'resize-image', 'crop-image']
-  },
-  
-  // Category mappings
-  categories: {
-    pdf: ['merge-pdf', 'split-pdf', 'compress-pdf', 'pdf-to-jpg', 'jpg-to-pdf', 'rotate-pdf', 'watermark-pdf', 'extract-pages', 'unlock-pdf'],
-    image: ['compress-image', 'jpg-to-png', 'png-to-jpg', 'webp-to-jpg', 'resize-image', 'crop-image', 'remove-background', 'image-upscaler'],
-    compression: ['compress-image', 'compress-image-to-20kb', 'compress-image-to-50kb', 'compress-image-to-100kb', 'compress-pdf'],
-    conversion: ['jpg-to-png', 'png-to-jpg', 'webp-to-jpg', 'pdf-to-jpg', 'jpg-to-pdf'],
-    resize: ['resize-image', 'crop-image', 'image-upscaler'],
-    social: ['youtube-thumbnail-maker', 'instagram-post-resizer', 'facebook-cover-resizer', 'whatsapp-dp-resizer']
-  },
-  
-  // Guide mappings
-  guides: {
-    'compress-image': [
-      'how-to-compress-image-without-losing-quality',
-      'best-image-compression-settings-for-web',
-      'reduce-image-file-size-for-email'
-    ],
-    'compress-image-to-20kb': [
-      'how-to-compress-image-to-20kb',
-      'compress-image-for-whatsapp-profile',
-      'reduce-image-size-for-upload'
-    ],
-    'jpg-to-png': [
-      'how-to-convert-jpg-to-png',
-      'jpg-vs-png-when-to-use-each',
-      'convert-image-to-transparent-png'
-    ],
-    'resize-image': [
-      'how-to-resize-image-without-losing-quality',
-      'best-image-dimensions-for-social-media',
-      'resize-image-for-print'
-    ],
-    'merge-pdf': [
-      'how-to-merge-multiple-pdfs',
-      'combine-pdf-files-online-free',
-      'merge-pdfs-in-correct-order'
-    ],
-    'pdf-to-jpg': [
-      'how-to-convert-pdf-to-jpg-images',
-      'extract-images-from-pdf',
-      'save-pdf-pages-as-images'
-    ]
-  },
-  
-  // Generate related tools for a given tool
-  getRelatedTools(toolId, limit = 4) {
-    const related = this.toolRelations[toolId] || [];
-    
-    // If no specific relations, get from same category
-    if (related.length === 0) {
-      const category = this.getToolCategory(toolId);
-      if (category) {
-        const categoryTools = this.categories[category];
-        return categoryTools
-          .filter(t => t !== toolId)
-          .slice(0, limit);
+class InternalLinksEngine {
+  constructor() {
+    this.config = window.TOOLSAAS_CONFIG;
+  }
+
+  // Initialize all internal links for a page
+  init(options = {}) {
+    const { toolId, categoryId } = options;
+
+    // Render related tools
+    if (toolId) {
+      this.renderRelatedTools(toolId);
+    }
+
+    // Render category links
+    if (categoryId || toolId) {
+      const catId = categoryId || this.getToolCategory(toolId);
+      if (catId) {
+        this.renderCategoryLinks(catId);
       }
     }
-    
-    return related.slice(0, limit);
-  },
-  
+
+    // Render popular tools
+    this.renderPopularTools();
+
+    // Render recent tools (from history)
+    this.renderRecentTools();
+
+    // Render footer links
+    this.renderFooterLinks();
+  }
+
   // Get tool category
   getToolCategory(toolId) {
-    for (const [category, tools] of Object.entries(this.categories)) {
-      if (tools.includes(toolId)) {
-        return category;
-      }
+    const tool = this.config?.tools?.[toolId];
+    return tool?.category || null;
+  }
+
+  // Get tools by category
+  getToolsByCategory(categoryId, limit = 12) {
+    const tools = Object.entries(this.config?.tools || {})
+      .filter(([id, tool]) => tool.category === categoryId)
+      .slice(0, limit);
+
+    return tools.map(([id, tool]) => ({
+      id,
+      ...tool,
+      url: `/tools/${this.categoryToPath(tool.category)}/${id}.html`
+    }));
+  }
+
+  // Convert category ID to path
+  categoryToPath(categoryId) {
+    const parts = categoryId.split('-');
+    
+    if (parts[0] === 'image' && parts.length > 1) {
+      return `image/${parts.slice(1).join('-')}`;
     }
-    return null;
-  },
-  
-  // Generate related tools HTML
-  generateRelatedToolsHTML(toolId, limit = 4) {
-    const relatedIds = this.getRelatedTools(toolId, limit);
     
-    if (relatedIds.length === 0) return '';
-    
-    const toolNames = {
-      'compress-image': 'Compress Image',
-      'compress-image-to-20kb': 'Compress to 20KB',
-      'compress-image-to-50kb': 'Compress to 50KB',
-      'compress-image-to-100kb': 'Compress to 100KB',
-      'jpg-to-png': 'JPG to PNG',
-      'png-to-jpg': 'PNG to JPG',
-      'webp-to-jpg': 'WEBP to JPG',
-      'resize-image': 'Resize Image',
-      'crop-image': 'Crop Image',
-      'remove-background': 'Remove Background',
-      'image-upscaler': 'Image Upscaler',
-      'merge-pdf': 'Merge PDF',
-      'split-pdf': 'Split PDF',
-      'compress-pdf': 'Compress PDF',
-      'pdf-to-jpg': 'PDF to JPG',
-      'jpg-to-pdf': 'JPG to PDF',
-      'rotate-pdf': 'Rotate PDF',
-      'watermark-pdf': 'Watermark PDF',
-      'extract-pages': 'Extract Pages',
-      'unlock-pdf': 'Unlock PDF',
-      'youtube-thumbnail-maker': 'YouTube Thumbnail Maker',
-      'instagram-post-resizer': 'Instagram Post Resizer',
-      'facebook-cover-resizer': 'Facebook Cover Resizer',
-      'whatsapp-dp-resizer': 'WhatsApp DP Resizer'
-    };
-    
-    const categoryIcons = {
-      pdf: '📄',
-      image: '🖼️',
-      compression: '🗜️',
-      conversion: '🔄',
-      resize: '📐',
-      social: '📱'
-    };
-    
-    return `
-      <div class="related-tools-section mt-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Related Tools</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          ${relatedIds.map(id => {
-            const category = this.getToolCategory(id);
-            const name = toolNames[id] || id;
-            const icon = categoryIcons[category] || '🛠️';
-            
-            return `
-              <a href="/tools/${category}/${id}.html" 
-                 class="related-tool-card glass-card p-4 rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div class="text-3xl mb-2">${icon}</div>
-                <h3 class="font-semibold text-gray-900 dark:text-white">${name}</h3>
-                <span class="text-sm text-purple-600 dark:text-purple-400">Free Tool →</span>
-              </a>
-            `;
-          }).join('')}
-        </div>
+    return categoryId;
+  }
+
+  // Render related tools section
+  renderRelatedTools(currentToolId) {
+    const container = document.getElementById('related-tools');
+    if (!container) return;
+
+    const currentTool = this.config?.tools?.[currentToolId];
+    if (!currentTool) return;
+
+    // Get tools from same category (excluding current)
+    const categoryTools = this.getToolsByCategory(currentTool.category, 8)
+      .filter(tool => tool.id !== currentToolId);
+
+    // If not enough in category, add from other categories
+    if (categoryTools.length < 4) {
+      const allTools = Object.entries(this.config?.tools || {})
+        .filter(([id]) => id !== currentToolId)
+        .map(([id, tool]) => ({ id, ...tool }))
+        .slice(0, 8 - categoryTools.length);
+      
+      categoryTools.push(...allTools);
+    }
+
+    container.innerHTML = `
+      <h2 class="section-title">Related Tools</h2>
+      <div class="tools-grid">
+        ${categoryTools.map(tool => this.renderToolCard(tool)).join('')}
       </div>
     `;
-  },
-  
-  // Generate related guides HTML
-  generateRelatedGuidesHTML(toolId, limit = 3) {
-    const guideIds = this.guides[toolId] || [];
-    
-    if (guideIds.length === 0) return '';
-    
-    const guideTitles = {
-      'how-to-compress-image-without-losing-quality': 'How to Compress Image Without Losing Quality',
-      'best-image-compression-settings-for-web': 'Best Image Compression Settings for Web',
-      'reduce-image-file-size-for-email': 'Reduce Image File Size for Email',
-      'how-to-compress-image-to-20kb': 'How to Compress Image to 20KB',
-      'compress-image-for-whatsapp-profile': 'Compress Image for WhatsApp Profile',
-      'reduce-image-size-for-upload': 'Reduce Image Size for Upload',
-      'how-to-convert-jpg-to-png': 'How to Convert JPG to PNG',
-      'jpg-vs-png-when-to-use-each': 'JPG vs PNG: When to Use Each',
-      'convert-image-to-transparent-png': 'Convert Image to Transparent PNG',
-      'how-to-resize-image-without-losing-quality': 'How to Resize Image Without Losing Quality',
-      'best-image-dimensions-for-social-media': 'Best Image Dimensions for Social Media',
-      'resize-image-for-print': 'Resize Image for Print',
-      'how-to-merge-multiple-pdfs': 'How to Merge Multiple PDFs',
-      'combine-pdf-files-online-free': 'Combine PDF Files Online Free',
-      'merge-pdfs-in-correct-order': 'Merge PDFs in Correct Order',
-      'how-to-convert-pdf-to-jpg-images': 'How to Convert PDF to JPG Images',
-      'extract-images-from-pdf': 'Extract Images from PDF',
-      'save-pdf-pages-as-images': 'Save PDF Pages as Images'
-    };
-    
-    return `
-      <div class="related-guides-section mt-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Related Guides</h2>
-        <div class="space-y-4">
-          ${guideIds.slice(0, limit).map(id => {
-            const title = guideTitles[id] || id;
-            return `
-              <a href="/guides/${id}.html" 
-                 class="guide-link block p-4 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
-                <h3 class="font-semibold text-gray-900 dark:text-white">${title}</h3>
-                <span class="text-sm text-purple-600 dark:text-purple-400">Read Guide →</span>
-              </a>
-            `;
-          }).join('')}
-        </div>
+  }
+
+  // Render category links section
+  renderCategoryLinks(categoryId) {
+    const container = document.getElementById('category-links');
+    if (!container) return;
+
+    const category = this.config?.categories?.find(c => c.id === categoryId);
+    if (!category) return;
+
+    const tools = this.getToolsByCategory(categoryId, 6);
+
+    container.innerHTML = `
+      <div class="category-header">
+        <span class="category-icon">${category.icon}</span>
+        <h2>${category.name}</h2>
       </div>
+      <ul class="category-tools-list">
+        ${tools.map(tool => `
+          <li>
+            <a href="${tool.url}" class="category-tool-link">
+              ${tool.name}
+            </a>
+          </li>
+        `).join('')}
+      </ul>
+      <a href="/categories/${categoryId}.html" class="view-all-link">
+        View all ${category.name} →
+      </a>
     `;
-  },
-  
-  // Generate category navigation HTML
-  generateCategoryNavHTML(currentCategory) {
-    const categories = [
-      { id: 'pdf', name: 'PDF Tools', icon: '📄' },
-      { id: 'image', name: 'Image Tools', icon: '🖼️' },
-      { id: 'compression', name: 'Compression', icon: '🗜️' },
-      { id: 'conversion', name: 'Conversion', icon: '🔄' },
-      { id: 'resize', name: 'Resize', icon: '📐' },
-      { id: 'social', name: 'Social Media', icon: '📱' }
+  }
+
+  // Render popular tools
+  renderPopularTools() {
+    const container = document.getElementById('popular-tools');
+    if (!container) return;
+
+    // Popular tools (hardcoded for now, could be dynamic based on analytics)
+    const popularIds = [
+      'compress-image',
+      'merge-pdf',
+      'jpg-to-png',
+      'resize-image',
+      'pdf-to-jpg',
+      'compress-image-to-20kb'
     ];
+
+    const popularTools = popularIds
+      .map(id => {
+        const tool = this.config?.tools?.[id];
+        return tool ? { id, ...tool } : null;
+      })
+      .filter(Boolean);
+
+    container.innerHTML = `
+      <h2 class="section-title">Most Popular Tools</h2>
+      <div class="tools-grid">
+        ${popularTools.map(tool => this.renderToolCard(tool)).join('')}
+      </div>
+    `;
+  }
+
+  // Render recent tools from history
+  renderRecentTools() {
+    const container = document.getElementById('recent-tools');
+    if (!container) return;
+
+    const history = window.appState?.get('history') || [];
+    
+    if (history.length === 0) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    // Get unique recent tool IDs
+    const recentIds = [...new Set(history.map(h => h.tool))].slice(0, 4);
+    
+    const recentTools = recentIds
+      .map(id => {
+        const tool = this.config?.tools?.[id];
+        return tool ? { id, ...tool } : null;
+      })
+      .filter(Boolean);
+
+    if (recentTools.length === 0) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    container.innerHTML = `
+      <h3>Recently Used</h3>
+      <div class="recent-tools-list">
+        ${recentTools.map(tool => `
+          <a href="/tools/${this.categoryToPath(tool.category)}/${tool.id}.html" class="recent-tool-item">
+            <span class="recent-tool-icon">${tool.icon || '🛠️'}</span>
+            <span class="recent-tool-name">${tool.name}</span>
+          </a>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // Render tool card HTML
+  renderToolCard(tool) {
+    const category = this.config?.categories?.find(c => c.id === tool.category);
     
     return `
-      <nav class="category-nav mb-8">
-        <ul class="flex flex-wrap gap-2">
-          ${categories.map(cat => `
-            <li>
-              <a href="/tools/${cat.id}/" 
-                 class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors
-                        ${currentCategory === cat.id 
-                          ? 'bg-purple-600 text-white' 
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/20'}">
-                <span>${cat.icon}</span>
-                <span>${cat.name}</span>
-              </a>
-            </li>
-          `).join('')}
-        </ul>
-      </nav>
+      <a href="/tools/${this.categoryToPath(tool.category)}/${tool.id}.html" class="tool-card" data-tool-id="${tool.id}">
+        <div class="tool-card-icon" style="background-color: ${category?.color || '#6C5CE7'}20;">
+          <span class="tool-emoji">${tool.icon || category?.icon || '🛠️'}</span>
+        </div>
+        <div class="tool-card-content">
+          <h3 class="tool-card-title">${tool.name}</h3>
+          <p class="tool-card-description">${tool.description}</p>
+        </div>
+        <div class="tool-card-arrow">→</div>
+      </a>
     `;
-  },
-  
-  // Generate breadcrumb HTML
-  generateBreadcrumbHTML(items) {
-    return `
-      <nav class="breadcrumb mb-6" aria-label="Breadcrumb">
-        <ol class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+  }
+
+  // Render footer links
+  renderFooterLinks() {
+    const containers = document.querySelectorAll('.footer-links-container');
+    
+    containers.forEach(container => {
+      // Categories
+      const categoriesList = container.querySelector('.footer-categories');
+      if (categoriesList) {
+        categoriesList.innerHTML = this.config?.categories?.map(cat => `
+          <li><a href="/categories/${cat.id}.html">${cat.name}</a></li>
+        `).join('') || '';
+      }
+
+      // All tools
+      const toolsList = container.querySelector('.footer-tools');
+      if (toolsList) {
+        const allTools = Object.entries(this.config?.tools || {})
+          .slice(0, 20)
+          .map(([id, tool]) => `
+            <li>
+              <a href="/tools/${this.categoryToPath(tool.category)}/${id}.html">${tool.name}</a>
+            </li>
+          `).join('');
+        
+        toolsList.innerHTML = allTools;
+      }
+    });
+  }
+
+  // Render breadcrumb navigation
+  renderBreadcrumb(items = []) {
+    const container = document.getElementById('breadcrumb');
+    if (!container) return;
+
+    if (items.length === 0) {
+      items = this.generateBreadcrumbFromPath();
+    }
+
+    container.innerHTML = `
+      <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
           ${items.map((item, index) => `
-            <li class="flex items-center gap-2">
-              ${index > 0 ? '<span class="text-gray-400">/</span>' : ''}
-              ${index === items.length - 1 
-                ? `<span class="text-gray-900 dark:text-white font-medium">${item.name}</span>`
-                : `<a href="${item.url}" class="hover:text-purple-600 dark:hover:text-purple-400">${item.name}</a>`}
+            <li class="breadcrumb-item${index === items.length - 1 ? ' active' : ''}">
+              ${index < items.length - 1 
+                ? `<a href="${item.url}">${item.name}</a>`
+                : `<span>${item.name}</span>`
+              }
             </li>
           `).join('')}
         </ol>
       </nav>
     `;
-  },
-  
-  // Inject all internal links into page
-  injectIntoPage(toolId, containerSelectors = {}) {
-    const {
-      relatedToolsContainer = '#relatedTools',
-      relatedGuidesContainer = '#relatedGuides',
-      categoryNavContainer = '#categoryNav',
-      breadcrumbContainer = '#breadcrumb'
-    } = containerSelectors;
-    
-    // Related tools
-    if (relatedToolsContainer) {
-      const el = document.querySelector(relatedToolsContainer);
-      if (el) el.innerHTML = this.generateRelatedToolsHTML(toolId);
-    }
-    
-    // Related guides
-    if (relatedGuidesContainer) {
-      const el = document.querySelector(relatedGuidesContainer);
-      if (el) el.innerHTML = this.generateRelatedGuidesHTML(toolId);
-    }
-    
-    // Category nav
-    if (categoryNavContainer) {
-      const el = document.querySelector(categoryNavContainer);
-      const category = this.getToolCategory(toolId);
-      if (el) el.innerHTML = this.generateCategoryNavHTML(category);
-    }
-    
-    // Breadcrumb
-    if (breadcrumbContainer) {
-      const el = document.querySelector(breadcrumbContainer);
-      const category = this.getToolCategory(toolId);
-      if (el) {
-        const breadcrumbs = [
-          { name: 'Home', url: '/' },
-          { name: 'Tools', url: '/tools/' },
-          { name: category ? Config.categories[category]?.name : 'Tools', url: `/tools/${category}/` },
-          { name: document.title.replace(' - BrowserTools', '') }
-        ];
-        el.innerHTML = this.generateBreadcrumbHTML(breadcrumbs);
-      }
-    }
   }
-};
+
+  // Generate breadcrumb from path
+  generateBreadcrumbFromPath() {
+    const path = window.location.pathname;
+    const segments = path.split('/').filter(Boolean);
+    const breadcrumbs = [];
+    
+    const baseUrl = window.location.origin;
+    
+    breadcrumbs.push({ name: 'Home', url: baseUrl });
+
+    let currentUrl = baseUrl;
+    segments.forEach((segment) => {
+      currentUrl += '/' + segment;
+      
+      const name = segment
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+      
+      breadcrumbs.push({ name, url: currentUrl });
+    });
+
+    return breadcrumbs;
+  }
+
+  // Get SEO-friendly internal links for content
+  getContentLinks(context = 'default') {
+    const links = {
+      homepage: { text: 'Home', url: '/' },
+      categories: [],
+      popularTools: [],
+      guides: []
+    };
+
+    // Category links
+    links.categories = (this.config?.categories || []).slice(0, 5).map(cat => ({
+      text: `${cat.icon} ${cat.name}`,
+      url: `/categories/${cat.id}.html`
+    }));
+
+    // Popular tools
+    const popularIds = ['compress-image', 'merge-pdf', 'jpg-to-png', 'resize-image'];
+    links.popularTools = popularIds
+      .map(id => {
+        const tool = this.config?.tools?.[id];
+        return tool ? {
+          text: tool.name,
+          url: `/tools/${this.categoryToPath(tool.category)}/${id}.html`
+        } : null;
+      })
+      .filter(Boolean);
+
+    // Guide links
+    links.guides = [
+      { text: 'How to Compress Images', url: '/guides/how-to-compress-image.html' },
+      { text: 'PDF Tips & Tricks', url: '/guides/pdf-tips.html' },
+      { text: 'Image Format Guide', url: '/guides/image-formats.html' }
+    ];
+
+    return links;
+  }
+
+  // Inject contextual links into content
+  injectContentLinks(selector, context = 'default') {
+    const container = document.querySelector(selector);
+    if (!container) return;
+
+    const links = this.getContentLinks(context);
+    
+    // Add "See also" section
+    const seeAlso = document.createElement('div');
+    seeAlso.className = 'see-also-section';
+    seeAlso.innerHTML = `
+      <h3>See Also</h3>
+      <ul>
+        ${links.popularTools.map(link => `
+          <li><a href="${link.url}">${link.text}</a></li>
+        `).join('')}
+      </ul>
+    `;
+
+    container.appendChild(seeAlso);
+  }
+}
+
+// Create global internal links engine instance
+window.internalLinks = new InternalLinksEngine();
