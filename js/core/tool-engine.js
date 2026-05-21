@@ -1,307 +1,475 @@
-/**
- * BrowserTools - Tool Engine
- * Reusable tool initialization and processing system
- */
+/* ========================================
+   TOOL ENGINE
+   Reusable architecture for all tools
+   ======================================== */
 
-const ToolEngine = {
-  initialized: false,
-  currentToolId: null,
-  
-  // Tool configurations
-  tools: {
-    'compress-image': {
-      name: 'Compress Image',
-      category: 'image',
-      worker: 'compress',
-      acceptedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-      settings: {
-        quality: { type: 'range', min: 10, max: 100, default: 80, label: 'Quality' },
-        format: { type: 'select', options: ['jpeg', 'png', 'webp'], default: 'jpeg', label: 'Output Format' }
-      }
-    },
-    'compress-image-to-20kb': {
-      name: 'Compress Image to 20KB',
-      category: 'compression',
-      worker: 'compress',
-      acceptedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-      settings: {
-        targetSize: { type: 'fixed', value: 20, unit: 'KB' }
-      }
-    },
-    'jpg-to-png': {
-      name: 'JPG to PNG',
-      category: 'conversion',
-      worker: 'convert',
-      acceptedTypes: ['image/jpeg'],
-      settings: {}
-    },
-    'resize-image': {
-      name: 'Resize Image',
-      category: 'resize',
-      worker: 'resize',
-      acceptedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-      settings: {
-        width: { type: 'number', default: 800, label: 'Width (px)' },
-        height: { type: 'number', default: null, label: 'Height (px)' },
-        maintainAspectRatio: { type: 'checkbox', default: true, label: 'Maintain Aspect Ratio' }
-      }
-    },
-    'merge-pdf': {
-      name: 'Merge PDF',
-      category: 'pdf',
-      worker: 'pdfMerge',
-      acceptedTypes: ['application/pdf'],
-      multiFile: true,
-      settings: {}
+class ToolEngine {
+  constructor(toolConfig) {
+    this.config = {
+      id: null,
+      name: '',
+      description: '',
+      category: '',
+      icon: '',
+      allowedTypes: [],
+      maxFiles: 1,
+      maxSize: 50 * 1024 * 1024,
+      workerType: null,
+      settings: {},
+      onProcess: null,
+      ...toolConfig
+    };
+
+    this.uploadEngine = null;
+    this.state = {
+      initialized: false,
+      files: [],
+      processing: false,
+      progress: 0,
+      result: null,
+      error: null,
+      settings: { ...this.config.settings }
+    };
+
+    this.callbacks = {
+      onFileAdded: null,
+      onFileRemoved: null,
+      onProcessing: null,
+      onProgress: null,
+      onComplete: null,
+      onError: null,
+      onReset: null
+    };
+
+    this.init();
+  }
+
+  init() {
+    if (this.state.initialized) return;
+
+    // Initialize upload engine
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    if (dropZone && fileInput) {
+      this.uploadEngine = new UploadEngine({
+        dropZone,
+        fileInput,
+        allowedTypes: this.config.allowedTypes,
+        maxSize: this.config.maxSize,
+        maxFiles: this.config.maxFiles,
+        onFilesAdded: (files) => this.handleFilesAdded(files),
+        onError: (errors) => this.handleUploadError(errors)
+      });
     }
-  },
-  
-  // Initialize tool from URL
-  async initFromURL(path) {
-    const toolId = path.split('/').pop().replace('.html', '');
-    
-    if (!this.tools[toolId]) {
-      console.warn('Tool not found:', toolId);
-      return;
-    }
-    
-    this.currentToolId = toolId;
-    await this.init(toolId);
-  },
-  
-  // Initialize specific tool
-  async init(toolId) {
-    const tool = this.tools[toolId];
-    if (!tool) {
-      Toast.error('Tool not found');
-      return;
-    }
-    
-    AppState.set('currentTool', toolId);
-    
-    // Setup upload area
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    
-    if (uploadArea && fileInput) {
-      UploadEngine.bind(uploadArea, fileInput, (files) => this.handleFiles(files, tool));
-    }
-    
-    // Setup settings panel
-    this.setupSettingsPanel(tool);
-    
-    console.log('Tool initialized:', toolId);
-  },
-  
-  // Handle uploaded files
-  async handleFiles(files, tool) {
-    AppState.set('uploadedFiles', files);
-    
-    // Generate previews
-    const previews = await UploadEngine.generatePreviews(files);
-    this.renderPreviews(previews, tool);
-    
-    // Show process button
-    const processBtn = document.getElementById('processBtn');
+
+    // Bind process button
+    const processBtn = document.getElementById('process-btn');
     if (processBtn) {
-      processBtn.style.display = 'block';
-      processBtn.onclick = () => this.process(tool);
+      processBtn.addEventListener('click', () => this.process());
     }
-  },
-  
-  // Render file previews
-  renderPreviews(previews, tool) {
-    const previewContainer = document.getElementById('previewContainer');
-    if (!previewContainer) return;
-    
-    previewContainer.innerHTML = previews.map((preview, index) => `
-      <div class="preview-card" data-index="${index}">
-        ${preview.type === 'image' ? `
-          <img src="${preview.dataURL}" alt="${preview.name}" />
-        ` : `
-          <div class="pdf-preview">
-            <span class="pdf-icon">📄</span>
-            <span class="pdf-name">${preview.name}</span>
-          </div>
-        `}
-        <div class="preview-info">
-          <span class="preview-name">${preview.name}</span>
-          <span class="preview-size">${Utils.formatFileSize(preview.size)}</span>
-        </div>
-        <button class="remove-preview" onclick="ToolEngine.removePreview(${index})">×</button>
-      </div>
-    `).join('');
-    
-    previewContainer.style.display = 'grid';
-  },
-  
-  // Remove preview
-  removePreview(index) {
-    UploadEngine.removeFile(index);
-    const previews = UploadEngine.previews;
-    this.renderPreviews(previews, this.tools[this.currentToolId]);
-    
-    if (previews.length === 0) {
-      document.getElementById('previewContainer').style.display = 'none';
-      document.getElementById('processBtn').style.display = 'none';
+
+    // Bind reset/new file button
+    const resetBtn = document.getElementById('reset-btn') || document.getElementById('new-file-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => this.reset());
     }
-  },
-  
-  // Setup settings panel
-  setupSettingsPanel(tool) {
-    const settingsContainer = document.getElementById('settingsContainer');
-    if (!settingsContainer || !tool.settings) return;
+
+    // Bind settings changes
+    this.bindSettingsListeners();
+
+    this.state.initialized = true;
+
+    // Update UI based on state
+    this.render();
+  }
+
+  bindSettingsListeners() {
+    // Listen for setting changes
+    const settingsContainer = document.getElementById('settings-container');
+    if (!settingsContainer) return;
+
+    const inputs = settingsContainer.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      input.addEventListener('change', (e) => {
+        const key = e.target.dataset.setting || e.target.id.replace('-setting', '');
+        let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        
+        // Convert number strings to numbers
+        if (e.target.type === 'number' || e.target.dataset.type === 'number') {
+          value = parseFloat(value);
+        }
+
+        this.state.settings[key] = value;
+        
+        // Auto-process if enabled
+        if (this.config.settings.autoProcess && !this.state.processing) {
+          this.process();
+        }
+      });
+    });
+  }
+
+  handleFilesAdded(files) {
+    this.state.files = files;
     
-    const settingsHTML = Object.entries(tool.settings).map(([key, setting]) => {
-      switch(setting.type) {
-        case 'range':
-          return `
-            <div class="setting-row">
-              <label>${setting.label}</label>
-              <input type="range" id="setting-${key}" 
-                min="${setting.min}" max="${setting.max}" 
-                value="${AppState.settings[key] || setting.default}"
-                oninput="document.getElementById('setting-${key}-value').textContent = this.value" />
-              <span id="setting-${key}-value">${AppState.settings[key] || setting.default}</span>
-            </div>
-          `;
-        case 'select':
-          return `
-            <div class="setting-row">
-              <label>${setting.label}</label>
-              <select id="setting-${key}">
-                ${setting.options.map(opt => `<option value="${opt}" ${AppState.settings[key] === opt ? 'selected' : ''}>${opt.toUpperCase()}</option>`).join('')}
-              </select>
-            </div>
-          `;
-        case 'number':
-          return `
-            <div class="setting-row">
-              <label>${setting.label}</label>
-              <input type="number" id="setting-${key}" 
-                value="${AppState.settings[key] || setting.default}" />
-            </div>
-          `;
-        case 'checkbox':
-          return `
-            <div class="setting-row">
-              <label>${setting.label}</label>
-              <input type="checkbox" id="setting-${key}" 
-                ${AppState.settings[key] !== undefined ? AppState.settings[key] : setting.default} />
-            </div>
-          `;
-        case 'fixed':
-          return `
-            <div class="setting-row">
-              <span>${setting.label}: ${setting.value}${setting.unit}</span>
-            </div>
-          `;
-        default:
-          return '';
+    // Update app state
+    if (window.appState) {
+      files.forEach(f => {
+        window.appState.addFile(f.file);
+      });
+    }
+
+    // Callback
+    if (this.callbacks.onFileAdded) {
+      this.callbacks.onFileAdded(files);
+    }
+
+    // Auto-start processing if single file and enabled
+    if (this.config.settings.autoStart && files.length === 1) {
+      this.process();
+    } else {
+      this.render();
+    }
+  }
+
+  handleUploadError(errors) {
+    this.state.error = errors[0]?.error || 'Upload failed';
+    
+    if (this.callbacks.onError) {
+      this.callbacks.onError(this.state.error);
+    }
+
+    this.render();
+  }
+
+  async process() {
+    if (this.state.processing || this.state.files.length === 0) return;
+
+    this.state.processing = true;
+    this.state.progress = 0;
+    this.state.error = null;
+
+    if (this.callbacks.onProcessing) {
+      this.callbacks.onProcessing(true);
+    }
+
+    this.render();
+
+    try {
+      let result;
+
+      // Use custom process function if provided
+      if (this.config.onProcess) {
+        result = await this.config.onProcess(this.state.files, this.state.settings, (progress) => {
+          this.state.progress = progress;
+          if (this.callbacks.onProgress) {
+            this.callbacks.onProgress(progress);
+          }
+          this.render();
+        });
+      } 
+      // Otherwise use worker
+      else if (this.config.workerType && window.workerManager) {
+        const fileData = this.state.files.map(f => ({
+          name: f.name,
+          type: f.type,
+          data: await this.fileToArrayBuffer(f.file)
+        }));
+
+        result = await window.workerManager.process(
+          this.config.workerType,
+          {
+            files: fileData,
+            settings: this.state.settings
+          },
+          (progress) => {
+            this.state.progress = progress;
+            if (this.callbacks.onProgress) {
+              this.callbacks.onProgress(progress);
+            }
+            this.render();
+          }
+        );
+      } else {
+        throw new Error('No processing method configured');
       }
-    }).join('');
-    
-    settingsContainer.innerHTML = settingsHTML;
-    settingsContainer.style.display = 'block';
-  },
-  
-  // Process files
-  async process(tool) {
-    const files = AppState.get('uploadedFiles');
-    if (!files || files.length === 0) {
-      Toast.error('No files to process');
-      return;
+
+      this.state.result = result;
+      this.state.processing = false;
+      this.state.progress = 100;
+
+      if (this.callbacks.onComplete) {
+        this.callbacks.onComplete(result);
+      }
+
+      // Add to history
+      if (window.appState) {
+        window.appState.addToHistory({
+          tool: this.config.id,
+          action: 'process',
+          filesProcessed: this.state.files.length,
+          result
+        });
+      }
+
+    } catch (error) {
+      this.state.error = error.message || 'Processing failed';
+      this.state.processing = false;
+
+      if (this.callbacks.onError) {
+        this.callbacks.onError(this.state.error);
+      }
     }
-    
-    AppState.set('isProcessing', true);
-    
-    // Get settings
-    const settings = {};
-    if (tool.settings) {
-      Object.keys(tool.settings).forEach(key => {
-        const el = document.getElementById(`setting-${key}`);
-        if (el) {
-          settings[key] = el.type === 'checkbox' ? el.checked : el.value;
+
+    this.render();
+  }
+
+  async fileToArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  async arrayBufferToBlob(arrayBuffer, type = 'application/octet-stream') {
+    return new Blob([arrayBuffer], { type });
+  }
+
+  download(filename, blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Add to history
+    if (window.appState) {
+      window.appState.addToHistory({
+        tool: this.config.id,
+        action: 'download',
+        filename
+      });
+    }
+  }
+
+  reset() {
+    // Clear files
+    if (this.uploadEngine) {
+      this.uploadEngine.clearFiles();
+    }
+
+    // Clear app state files
+    if (window.appState) {
+      window.appState.clearFiles();
+    }
+
+    // Reset state
+    this.state.files = [];
+    this.state.processing = false;
+    this.state.progress = 0;
+    this.state.result = null;
+    this.state.error = null;
+    this.state.settings = { ...this.config.settings };
+
+    // Reset form inputs
+    const settingsContainer = document.getElementById('settings-container');
+    if (settingsContainer) {
+      const inputs = settingsContainer.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+          input.checked = this.config.settings[input.dataset.setting || input.id.replace('-setting', '')] || false;
+        } else {
+          input.value = this.config.settings[input.dataset.setting || input.id.replace('-setting', '')] || '';
         }
       });
     }
-    
-    // Show progress
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    if (progressBar) progressBar.style.width = '0%';
-    if (progressText) progressText.textContent = 'Processing...';
-    
-    try {
-      // Read files
-      const fileData = await Promise.all(files.map(f => UploadEngine.readAsArrayBuffer(f)));
-      
-      // Process with worker
-      const result = await WorkerManager.process(tool.worker, {
-        files: fileData,
-        filenames: files.map(f => f.name),
-        settings
-      }, (progress) => {
-        if (progressBar) progressBar.style.width = `${progress}%`;
-      });
-      
-      // Handle result
-      if (result.success) {
-        AppState.set('processedFiles', result.files);
-        this.showDownload(result);
-        Toast.success('Processing complete!');
-      } else {
-        throw new Error(result.error || 'Processing failed');
-      }
-      
-    } catch (error) {
-      console.error('Processing error:', error);
-      Toast.error(error.message);
-    } finally {
-      AppState.set('isProcessing', false);
+
+    if (this.callbacks.onReset) {
+      this.callbacks.onReset();
     }
-  },
-  
-  // Show download section
-  showDownload(result) {
-    const downloadSection = document.getElementById('downloadSection');
-    if (!downloadSection) return;
-    
-    downloadSection.innerHTML = result.files.map((file, index) => {
-      const blob = new Blob([file.data], { type: file.mimeType });
-      const url = URL.createObjectURL(blob);
-      
-      return `
-        <div class="download-item">
-          <span class="download-name">${file.name}</span>
-          <span class="download-size">${Utils.formatFileSize(file.size)}</span>
-          <a href="${url}" download="${file.name}" class="btn btn-primary">
-            Download
-          </a>
-        </div>
-      `;
-    }).join('');
-    
-    downloadSection.style.display = 'block';
-    downloadSection.scrollIntoView({ behavior: 'smooth' });
-  },
-  
-  // Reset tool
-  reset() {
-    AppState.reset();
-    UploadEngine.clear();
-    
-    const previewContainer = document.getElementById('previewContainer');
-    const downloadSection = document.getElementById('downloadSection');
-    const processBtn = document.getElementById('processBtn');
-    
-    if (previewContainer) previewContainer.style.display = 'none';
-    if (downloadSection) downloadSection.style.display = 'none';
-    if (processBtn) processBtn.style.display = 'none';
-    
-    // Re-init tool
-    if (this.currentToolId) {
-      this.init(this.currentToolId);
+
+    this.render();
+  }
+
+  setCallback(name, callback) {
+    if (this.callbacks.hasOwnProperty(name)) {
+      this.callbacks[name] = callback;
     }
   }
-};
+
+  updateSetting(key, value) {
+    this.state.settings[key] = value;
+    
+    // Update UI
+    const input = document.querySelector(`[data-setting="${key}"]`) || 
+                  document.getElementById(`${key}-setting`);
+    if (input) {
+      if (input.type === 'checkbox') {
+        input.checked = value;
+      } else {
+        input.value = value;
+      }
+    }
+  }
+
+  getSetting(key) {
+    return this.state.settings[key];
+  }
+
+  render() {
+    // Update progress bar
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    if (progressBar) {
+      progressBar.style.width = `${this.state.progress}%`;
+      progressBar.classList.toggle('active', this.state.processing);
+    }
+    if (progressText) {
+      progressText.textContent = `${Math.round(this.state.progress)}%`;
+    }
+
+    // Show/hide processing state
+    const processingOverlay = document.getElementById('processing-overlay');
+    if (processingOverlay) {
+      processingOverlay.classList.toggle('hidden', !this.state.processing);
+    }
+
+    // Show/hide result section
+    const resultSection = document.getElementById('result-section');
+    if (resultSection) {
+      resultSection.classList.toggle('hidden', !this.state.result);
+    }
+
+    // Show/hide error
+    const errorSection = document.getElementById('error-section');
+    if (errorSection) {
+      errorSection.classList.toggle('hidden', !this.state.error);
+    }
+    const errorMessage = document.getElementById('error-message');
+    if (errorMessage) {
+      errorMessage.textContent = this.state.error || '';
+    }
+
+    // Update process button state
+    const processBtn = document.getElementById('process-btn');
+    if (processBtn) {
+      processBtn.disabled = this.state.processing || this.state.files.length === 0;
+      processBtn.classList.toggle('loading', this.state.processing);
+    }
+
+    // Render file previews
+    this.renderFilePreviews();
+
+    // Render result preview
+    this.renderResultPreview();
+  }
+
+  renderFilePreviews() {
+    const previewsContainer = document.getElementById('file-previews');
+    if (!previewsContainer) return;
+
+    if (this.state.files.length === 0) {
+      previewsContainer.innerHTML = '';
+      return;
+    }
+
+    previewsContainer.innerHTML = this.state.files.map(file => `
+      <div class="file-preview" data-file-id="${file.id}">
+        ${file.preview ? 
+          `<img src="${file.preview}" alt="${file.name}" />` : 
+          '<div class="file-icon">📄</div>'
+        }
+        <div class="file-info">
+          <span class="file-name">${file.name}</span>
+          <span class="file-size">${this.formatFileSize(file.size)}</span>
+        </div>
+        <button class="remove-file-btn" onclick="toolEngine.removeFile('${file.id}')">
+          ✕
+        </button>
+      </div>
+    `).join('');
+  }
+
+  removeFile(fileId) {
+    const index = this.state.files.findIndex(f => f.id === fileId);
+    if (index !== -1) {
+      this.state.files.splice(index, 1);
+      
+      if (window.appState) {
+        window.appState.removeFile(fileId);
+      }
+      
+      if (this.callbacks.onFileRemoved) {
+        this.callbacks.onFileRemoved(fileId);
+      }
+      
+      this.render();
+    }
+  }
+
+  renderResultPreview() {
+    const resultPreview = document.getElementById('result-preview');
+    if (!resultPreview || !this.state.result) return;
+
+    // Handle different result types
+    if (this.state.result.blob) {
+      const url = URL.createObjectURL(this.state.result.blob);
+      
+      if (this.state.result.blob.type.startsWith('image/')) {
+        resultPreview.innerHTML = `
+          <img src="${url}" alt="Result" class="result-image" />
+        `;
+      } else if (this.state.result.blob.type === 'application/pdf') {
+        resultPreview.innerHTML = `
+          <embed src="${url}" type="application/pdf" class="result-pdf" />
+        `;
+      } else {
+        resultPreview.innerHTML = `
+          <div class="result-file">
+            <div class="file-icon">📄</div>
+            <span>Ready to download</span>
+          </div>
+        `;
+      }
+
+      // Store URL for cleanup
+      resultPreview.dataset.objectUrl = url;
+    }
+  }
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  cleanup() {
+    // Clean up object URLs
+    const resultPreview = document.getElementById('result-preview');
+    if (resultPreview && resultPreview.dataset.objectUrl) {
+      URL.revokeObjectURL(resultPreview.dataset.objectUrl);
+    }
+
+    // Destroy upload engine
+    if (this.uploadEngine) {
+      this.uploadEngine.destroy();
+    }
+  }
+
+  destroy() {
+    this.cleanup();
+    this.state = {};
+    this.callbacks = {};
+  }
+}
+
+// Export for use
+window.ToolEngine = ToolEngine;

@@ -4,32 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- SEO Meta Tags - Dynamic -->
+  <!-- SEO Meta Tags (Populated by JS) -->
   <title data-tool-name>Tool Name - BrowserTools</title>
-  <meta name="description" content="Free browser-based tool. Process files instantly without uploading to servers." />
-  <link rel="canonical" href="" />
+  <meta name="description" content="Free browser-based tool for processing files. No uploads, 100% private.">
+  <meta name="keywords" content="online tool, free, browser-based, privacy">
+  <link rel="canonical" href="">
   
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Tool Name - BrowserTools" />
-  <meta property="og:description" content="Free browser-based tool. Process files instantly." />
-  <meta property="og:image" content="/assets/og-image.jpg" />
+  <!-- OpenGraph -->
+  <meta property="og:title" content="Tool Name - BrowserTools">
+  <meta property="og:description" content="Free browser-based tool for processing files.">
+  <meta property="og:image" content="/assets/images/og-default.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
   
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Tool Name - BrowserTools" />
-  <meta name="twitter:description" content="Free browser-based tool." />
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Tool Name - BrowserTools">
+  <meta name="twitter:description" content="Free browser-based tool for processing files.">
+  <meta name="twitter:image" content="/assets/images/og-default.png">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   
-  <!-- TailwindCSS CDN -->
+  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -39,7 +41,9 @@
           colors: {
             primary: '#6C5CE7',
             secondary: '#00C2FF',
-            accent: '#FF6B6B'
+            accent: '#FF6B6B',
+            background: '#F8FAFC',
+            dark: '#111827'
           }
         }
       }
@@ -48,213 +52,200 @@
   
   <!-- Custom Styles -->
   <style>
-    /* Glassmorphism */
-    .glass-card {
+    .glass {
       background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    
-    .dark .glass-card {
-      background: rgba(31, 41, 55, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+    .dark .glass {
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
-    /* Gradient Text */
+    .gradient-primary {
+      background: linear-gradient(135deg, #6C5CE7 0%, #00C2FF 100%);
+    }
     .gradient-text {
       background: linear-gradient(135deg, #6C5CE7 0%, #00C2FF 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    
-    /* Upload Area Animation */
-    .upload-area {
-      transition: all 0.3s ease;
-    }
-    
-    .upload-area.drag-over {
-      transform: scale(1.02);
-      border-color: #6C5CE7;
-      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
-    }
-    
-    /* Progress Bar */
-    .progress-bar {
-      transition: width 0.3s ease;
-    }
-    
-    /* Animations */
     @keyframes float {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-10px); }
     }
-    
-    .animate-float {
-      animation: float 3s ease-in-out infinite;
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    .drag-over {
+      border-color: #6C5CE7 !important;
+      background: rgba(108, 92, 231, 0.05) !important;
     }
-    
-    @keyframes pulse-ring {
-      0% { transform: scale(0.8); opacity: 0.5; }
-      100% { transform: scale(1.5); opacity: 0; }
+    .progress-bar { transition: width 0.3s ease; }
+    .progress-bar.active {
+      background: linear-gradient(90deg, #6C5CE7, #00C2FF);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
     }
-    
-    .pulse-ring::before {
-      content: '';
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .file-preview {
+      position: relative;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .dark .file-preview { background: #1f2937; }
+    .file-preview img { width: 100%; height: 150px; object-fit: cover; }
+    .remove-file-btn {
       position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      border: 2px solid #6C5CE7;
-      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      top: 8px; right: 8px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .remove-file-btn:hover { background: #FF6B6B; color: white; }
+    .tool-card { transition: all 0.3s ease; }
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(108, 92, 231, 0.15);
     }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+<body class="bg-background dark:bg-dark text-gray-900 dark:text-gray-100 min-h-screen">
   
   <!-- Navigation -->
-  <nav class="sticky top-0 z-40 glass-card border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <a href="/" class="font-display font-bold text-xl gradient-text">BrowserTools</a>
-        <div class="hidden md:flex items-center gap-6">
-          <a href="/tools/pdf/" class="text-gray-600 dark:text-gray-300 hover:text-primary">PDF Tools</a>
-          <a href="/tools/image/" class="text-gray-600 dark:text-gray-300 hover:text-primary">Image Tools</a>
-          <a href="/guides/" class="text-gray-600 dark:text-gray-300 hover:text-primary">Guides</a>
-          <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-            🌙
-          </button>
+  <nav class="sticky top-0 z-50 glass border-b border-gray-200 dark:border-gray-800">
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        <a href="/" class="text-2xl font-display font-bold gradient-text">BrowserTools</a>
+        <div class="hidden md:flex items-center space-x-6">
+          <a href="/tools/pdf/merge-pdf.html" class="hover:text-primary transition">PDF Tools</a>
+          <a href="/tools/image/compress-image.html" class="hover:text-primary transition">Image Tools</a>
+          <a href="/guides/" class="hover:text-primary transition">Guides</a>
+          <a href="/about.html" class="hover:text-primary transition">About</a>
         </div>
+        <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">🌙</button>
       </div>
     </div>
   </nav>
-  
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    
-    <!-- Breadcrumb -->
-    <div id="breadcrumb"></div>
-    
-    <!-- Category Navigation -->
-    <div id="categoryNav"></div>
+
+  <!-- Breadcrumb -->
+  <div id="breadcrumb" class="container mx-auto px-4 py-4"></div>
+
+  <!-- Main Tool Section -->
+  <main class="container mx-auto px-4 py-8">
     
     <!-- Tool Header -->
-    <div class="text-center mb-12">
-      <h1 id="toolTitle" class="font-display text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-        Tool Name
-      </h1>
-      <p id="toolDescription" class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-        Free browser-based tool. Process files instantly without uploading to servers.
-      </p>
+    <div class="text-center mb-8">
+      <h1 id="tool-title" class="text-4xl md:text-5xl font-display font-bold mb-4 gradient-text">Tool Name</h1>
+      <p id="tool-description" class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Tool description goes here</p>
     </div>
-    
-    <!-- Tool Interface -->
-    <div class="max-w-3xl mx-auto">
-      
-      <!-- Upload Area -->
-      <div id="uploadArea" class="upload-area glass-card rounded-2xl p-12 text-center cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-primary transition-all">
-        <input type="file" id="fileInput" class="hidden" multiple />
-        
+
+    <!-- Upload Area -->
+    <div class="max-w-4xl mx-auto">
+      <div 
+        id="drop-zone" 
+        class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
+      >
+        <input type="file" id="file-input" class="hidden" multiple>
         <div class="space-y-4">
-          <div class="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-4xl animate-float">
-            📁
-          </div>
-          
+          <div class="text-6xl animate-float">📁</div>
           <div>
-            <p class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Drop files here or click to upload
-            </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              Supports drag & drop, click upload, and paste from clipboard
-            </p>
+            <p class="text-xl font-semibold mb-2">Drag & drop files here</p>
+            <p class="text-gray-500 dark:text-gray-400">or click to browse</p>
           </div>
-          
-          <div class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Drag & Drop</span>
-            <span>•</span>
-            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Click Upload</span>
-            <span>•</span>
-            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Paste (Ctrl+V)</span>
-          </div>
+          <p class="text-sm text-gray-400">Supports paste from clipboard (Ctrl+V)</p>
+          <button class="gradient-primary text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition shadow-lg hover:shadow-xl">Select Files</button>
         </div>
       </div>
-      
-      <!-- Preview Container -->
-      <div id="previewContainer" class="hidden mt-8">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Selected Files</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-      </div>
-      
+
+      <!-- File Previews -->
+      <div id="file-previews" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"></div>
+
       <!-- Settings Panel -->
-      <div id="settingsContainer" class="hidden mt-8 glass-card rounded-xl p-6">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Settings</h3>
-        <div class="space-y-4"></div>
+      <div id="settings-container" class="mt-8 p-6 glass rounded-xl">
+        <h3 class="text-lg font-semibold mb-4">Settings</h3>
+        <div id="tool-settings" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
-      
+
       <!-- Process Button -->
-      <div id="processBtn" class="hidden mt-8">
-        <button class="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5">
-          Process Files
+      <div class="mt-8 text-center">
+        <button id="process-btn" disabled class="gradient-primary text-white px-12 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed">
+          <span class="btn-text">Process Files</span>
+          <span class="btn-loading hidden">Processing...</span>
         </button>
       </div>
-      
-      <!-- Progress Section -->
-      <div id="progressSection" class="hidden mt-8">
-        <div class="glass-card rounded-xl p-6">
-          <div class="flex items-center justify-between mb-2">
-            <span id="progressText" class="text-sm font-medium text-gray-600 dark:text-gray-400">Processing...</span>
-            <span id="progressPercent" class="text-sm font-medium text-primary">0%</span>
-          </div>
-          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-            <div id="progressBar" class="progress-bar h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 0%"></div>
+
+      <!-- Progress Bar -->
+      <div id="progress-section" class="mt-8 hidden">
+        <div class="flex justify-between text-sm mb-2">
+          <span>Progress</span>
+          <span id="progress-text">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+          <div id="progress-bar" class="progress-bar h-full rounded-full w-0"></div>
+        </div>
+      </div>
+
+      <!-- Result Section -->
+      <div id="result-section" class="mt-8 hidden">
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-xl font-semibold mb-4">Result</h3>
+          <div id="result-preview" class="mb-6"></div>
+          <div id="result-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
+          <div class="flex flex-col md:flex-row gap-4 justify-center">
+            <button id="download-btn" class="gradient-primary text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition shadow-lg">⬇️ Download</button>
+            <button id="reset-btn" class="border-2 border-gray-300 dark:border-gray-700 px-8 py-3 rounded-xl font-semibold hover:border-primary transition">🔄 Start Over</button>
           </div>
         </div>
       </div>
-      
-      <!-- Download Section -->
-      <div id="downloadSection" class="hidden mt-8">
-        <div class="glass-card rounded-xl p-6">
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">✅ Processing Complete!</h3>
-          <div class="space-y-3"></div>
-          <button onclick="ToolEngine.reset()" class="mt-6 w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-            Process Another File
-          </button>
+
+      <!-- Error Section -->
+      <div id="error-section" class="mt-8 hidden">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <p class="text-red-600 dark:text-red-400 flex items-center gap-2">
+            <span>⚠️</span>
+            <span id="error-message">Error occurred</span>
+          </p>
         </div>
       </div>
-      
     </div>
-    
+
     <!-- Related Tools -->
-    <div id="relatedTools" class="mt-16"></div>
-    
-    <!-- Related Guides -->
-    <div id="relatedGuides" class="mt-16"></div>
-    
+    <div id="related-tools" class="mt-16"></div>
+
     <!-- FAQ Section -->
-    <div class="mt-16 max-w-3xl mx-auto">
-      <h2 class="font-display text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-        Frequently Asked Questions
-      </h2>
-      <div id="faqContainer" class="space-y-4">
-        <!-- FAQs injected dynamically -->
-      </div>
-    </div>
-    
+    <section id="faq-section" class="mt-16 max-w-4xl mx-auto">
+      <h2 class="text-3xl font-display font-bold text-center mb-8">Frequently Asked Questions</h2>
+      <div id="faq-schema-data" class="space-y-4"></div>
+    </section>
+
+    <!-- How To Section -->
+    <section id="howto-section" class="mt-16 max-w-4xl mx-auto">
+      <h2 class="text-3xl font-display font-bold text-center mb-8">How to Use This Tool</h2>
+      <div id="howto-schema-data" class="space-y-4"></div>
+    </section>
+
   </main>
-  
+
   <!-- Footer -->
-  <footer class="border-t border-gray-200 dark:border-gray-800 mt-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
+    <div class="container mx-auto px-4 py-12">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
         <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Tools</h4>
+          <h4 class="font-semibold mb-4">Product</h4>
           <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li><a href="/tools/pdf/" class="hover:text-primary">PDF Tools</a></li>
-            <li><a href="/tools/image/" class="hover:text-primary">Image Tools</a></li>
-            <li><a href="/tools/compression/" class="hover:text-primary">Compression</a></li>
+            <li><a href="/" class="hover:text-primary">All Tools</a></li>
+            <li><a href="/categories/pdf.html" class="hover:text-primary">PDF Tools</a></li>
+            <li><a href="/categories/image.html" class="hover:text-primary">Image Tools</a></li>
           </ul>
         </div>
         <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Resources</h4>
+          <h4 class="font-semibold mb-4">Resources</h4>
           <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li><a href="/guides/" class="hover:text-primary">Guides</a></li>
             <li><a href="/about.html" class="hover:text-primary">About</a></li>
@@ -262,7 +253,7 @@
           </ul>
         </div>
         <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Legal</h4>
+          <h4 class="font-semibold mb-4">Legal</h4>
           <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li><a href="/legal/privacy-policy.html" class="hover:text-primary">Privacy Policy</a></li>
             <li><a href="/legal/terms-of-service.html" class="hover:text-primary">Terms of Service</a></li>
@@ -270,7 +261,7 @@
           </ul>
         </div>
         <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Connect</h4>
+          <h4 class="font-semibold mb-4">Connect</h4>
           <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li><a href="#" class="hover:text-primary">Twitter</a></li>
             <li><a href="#" class="hover:text-primary">GitHub</a></li>
@@ -278,18 +269,19 @@
           </ul>
         </div>
       </div>
-      <div class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-        <p>© 2024 BrowserTools. All rights reserved. 100% browser-based processing.</p>
+      <div class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
+        <p>&copy; 2024 BrowserTools. All rights reserved.</p>
+        <p class="mt-2">100% browser-based. No files are uploaded to any server.</p>
       </div>
     </div>
   </footer>
-  
+
   <!-- Toast Container -->
-  <div id="toastContainer"></div>
-  
+  <div id="toast-container"></div>
+
   <!-- Core Scripts -->
-  <script src="/js/core/utils.js"></script>
-  <script src="/js/core/app.js"></script>
+  <script src="/js/core/config.js"></script>
+  <script src="/js/core/state.js"></script>
   <script src="/js/core/upload-engine.js"></script>
   <script src="/js/core/worker-manager.js"></script>
   <script src="/js/core/tool-engine.js"></script>
@@ -298,78 +290,79 @@
   <script src="/js/seo/seo-engine.js"></script>
   <script src="/js/seo/internal-links.js"></script>
   
-  <!-- Tool Initialization Script -->
+  <!-- Tool-Specific Script -->
   <script>
-    // Tool configuration
     const TOOL_CONFIG = {
-      id: 'TOOL_ID_PLACEHOLDER',
+      id: 'tool-id',
       name: 'Tool Name',
-      category: 'image',
-      description: 'Free browser-based tool.',
-      keywords: ['tool', 'browser', 'free'],
+      description: 'Tool description',
+      category: 'category-id',
+      icon: '🛠️',
+      allowedTypes: ['image/*'],
+      maxFiles: 1,
+      maxSize: 50 * 1024 * 1024,
+      workerType: null,
+      settings: { quality: 0.8, format: 'image/jpeg' },
       faqs: [
-        { question: 'Is this tool free?', answer: 'Yes, this tool is completely free to use.' },
-        { question: 'Are my files uploaded to a server?', answer: 'No, all processing happens in your browser. Your files never leave your device.' },
-        { question: 'What file types are supported?', answer: 'This tool supports common file formats. Check the upload area for specific formats.' }
-      ]
+        { question: 'Is this tool free?', answer: 'Yes, this tool is 100% free.' },
+        { question: 'Are my files uploaded?', answer: 'No, all processing happens in your browser.' }
+      ],
+      howToSteps: ['Upload your file', 'Adjust settings if needed', 'Click process', 'Download your result']
     };
-    
-    // Initialize app and tool
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Initialize core
-      await App.init();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('tool-title').textContent = TOOL_CONFIG.name;
+      document.getElementById('tool-description').textContent = TOOL_CONFIG.description;
       
-      // Update page with tool info
-      document.getElementById('toolTitle').textContent = TOOL_CONFIG.name;
-      document.title = `${TOOL_CONFIG.name} - BrowserTools`;
-      document.getElementById('toolDescription').textContent = TOOL_CONFIG.description;
-      
-      // Generate and inject SEO
-      const seo = SEOEngine.generateToolSEO(TOOL_CONFIG);
-      SEOEngine.inject(seo);
-      
-      // Inject internal links
-      InternalLinks.injectIntoPage(TOOL_CONFIG.id);
-      
-      // Inject FAQs
-      const faqContainer = document.getElementById('faqContainer');
-      if (faqContainer && TOOL_CONFIG.faqs) {
-        faqContainer.innerHTML = TOOL_CONFIG.faqs.map(faq => `
-          <details class="group glass-card rounded-xl">
-            <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
-              <span class="font-medium text-gray-900 dark:text-white">${faq.question}</span>
-              <span class="text-primary group-open:rotate-45 transition-transform">+</span>
-            </summary>
-            <div class="px-4 pb-4 text-gray-600 dark:text-gray-400">${faq.answer}</div>
-          </details>
-        `).join('');
-      }
-      
-      // Initialize tool engine
-      await ToolEngine.init(TOOL_CONFIG.id);
-      
-      // Theme toggle
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-          document.documentElement.classList.toggle('dark');
-          const isDark = document.documentElement.classList.contains('dark');
-          localStorage.setItem('theme', isDark ? 'dark' : 'light');
-          themeToggle.textContent = isDark ? '☀️' : '🌙';
-        });
-        
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-          document.documentElement.classList.add('dark');
-          themeToggle.textContent = '☀️';
+      window.seoEngine.init({ title: TOOL_CONFIG.name, description: TOOL_CONFIG.description, toolId: TOOL_CONFIG.id });
+
+      const faqContainer = document.getElementById('faq-schema-data');
+      faqContainer.innerHTML = TOOL_CONFIG.faqs.map(faq => `
+        <div class="faq-item glass rounded-xl p-6">
+          <h3 class="font-semibold text-lg mb-2 faq-question">${faq.question}</h3>
+          <p class="text-gray-600 dark:text-gray-400 faq-answer">${faq.answer}</p>
+        </div>
+      `).join('');
+
+      const howtoContainer = document.getElementById('howto-schema-data');
+      howtoContainer.innerHTML = TOOL_CONFIG.howToSteps.map((step, index) => `
+        <div class="howto-step glass rounded-xl p-6 flex gap-4">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full gradient-primary text-white flex items-center justify-center font-bold">${index + 1}</div>
+          <div class="flex-grow"><p class="howto-text">${step}</p></div>
+        </div>
+      `).join('');
+
+      window.internalLinks.init({ toolId: TOOL_CONFIG.id, categoryId: TOOL_CONFIG.category });
+
+      window.toolEngine = new ToolEngine({
+        ...TOOL_CONFIG,
+        onProcess: async (files, settings, onProgress) => await processTool(files, settings, onProgress)
+      });
+
+      document.getElementById('download-btn')?.addEventListener('click', () => {
+        if (window.toolEngine.state.result?.blob) {
+          window.downloadEngine.download(window.toolEngine.state.result.filename, window.toolEngine.state.result.blob);
         }
+      });
+
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      });
+
+      if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
       }
     });
+
+    async function processTool(files, settings, onProgress) {
+      if (!TOOL_CONFIG.workerType) throw new Error('No worker configured for this tool');
+      const result = await window.workerManager.process(TOOL_CONFIG.workerType, { files, settings }, onProgress);
+      if (result.success && result.data) {
+        result.blob = new Blob([result.data], { type: result.blobType });
+      }
+      return result;
+    }
   </script>
-  
-  <!-- JSON-LD Schema -->
-  <script type="application/ld+json" id="toolSchema"></script>
-  
 </body>
 </html>

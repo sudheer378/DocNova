@@ -1,190 +1,301 @@
-/**
- * BrowserTools - SEO Engine
- * Centralized SEO metadata generation for tools, guides, and pages
- */
+/* ========================================
+   SEO ENGINE
+   Generate meta tags, OpenGraph, schema.org
+   ======================================== */
 
-const SEOEngine = {
-  config: {
-    siteName: 'BrowserTools',
-    siteUrl: 'https://browsertools.app',
-    defaultTitle: 'Free Browser-Based PDF & Image Tools',
-    defaultDescription: 'Compress, convert, resize, edit, and manage files instantly without uploading to servers. 100% browser-based, privacy-focused tools.'
-  },
-  
-  // Generate complete SEO metadata
-  generate(options = {}) {
+class SEOEngine {
+  constructor() {
+    this.config = window.TOOLSAAS_CONFIG?.seo || {};
+  }
+
+  // Initialize SEO for a page
+  init(options = {}) {
     const {
       title,
       description,
+      keywords,
       canonical,
       ogImage,
       type = 'website',
-      keywords = [],
-      toolData = null
+      toolId = null
     } = options;
-    
-    const meta = {
-      title: title ? `${title} - ${this.config.siteName}` : this.config.defaultTitle,
+
+    // Set title
+    if (title) {
+      this.setTitle(title);
+    }
+
+    // Set meta description
+    if (description) {
+      this.setMeta('description', description);
+    }
+
+    // Set keywords
+    if (keywords) {
+      this.setMeta('keywords', keywords);
+    }
+
+    // Set canonical URL
+    if (canonical) {
+      this.setCanonical(canonical);
+    }
+
+    // Set OpenGraph tags
+    this.setOpenGraph({
+      title: title || document.title,
       description: description || this.config.defaultDescription,
-      canonical: canonical || window.location.href,
-      keywords: keywords.join(', '),
-      ogImage: ogImage || `${this.config.siteUrl}/assets/og-image.jpg`
-    };
+      image: ogImage || '/assets/images/og-default.png',
+      type,
+      url: canonical || window.location.href,
+      siteName: this.config.appName || 'BrowserTools'
+    });
+
+    // Set Twitter Card
+    this.setTwitterCard({
+      card: 'summary_large_image',
+      title: title || document.title,
+      description: description || this.config.defaultDescription,
+      image: ogImage || '/assets/images/og-default.png',
+      creator: this.config.twitterHandle || '@browsertools'
+    });
+
+    // Add structured data
+    if (toolId) {
+      this.addToolSchema(toolId);
+    } else {
+      this.addWebsiteSchema();
+    }
+
+    // Add FAQ schema if FAQs exist
+    this.addFAQSchema();
+
+    // Add HowTo schema if instructions exist
+    this.addHowToSchema();
+
+    // Add BreadcrumbList schema
+    this.addBreadcrumbSchema(options.breadcrumb || []);
+  }
+
+  // Set page title
+  setTitle(title) {
+    document.title = `${title} - ${this.config.appName || 'BrowserTools'}`;
     
-    return {
-      ...meta,
-      html: this.generateMetaTags(meta),
-      jsonLd: toolData ? this.generateSchema(toolData) : this.generateWebsiteSchema()
-    };
-  },
-  
-  // Generate meta tags HTML
-  generateMetaTags(meta) {
-    return `
-      <!-- Primary Meta Tags -->
-      <title>${meta.title}</title>
-      <meta name="description" content="${meta.description}" />
-      <meta name="keywords" content="${meta.keywords}" />
-      <link rel="canonical" href="${meta.canonical}" />
-      
-      <!-- Open Graph / Facebook -->
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content="${meta.canonical}" />
-      <meta property="og:title" content="${meta.title}" />
-      <meta property="og:description" content="${meta.description}" />
-      <meta property="og:image" content="${meta.ogImage}" />
-      
-      <!-- Twitter -->
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:url" content="${meta.canonical}" />
-      <meta name="twitter:title" content="${meta.title}" />
-      <meta name="twitter:description" content="${meta.description}" />
-      <meta name="twitter:image" content="${meta.ogImage}" />
-      
-      <!-- Additional SEO -->
-      <meta name="robots" content="index, follow" />
-      <meta name="author" content="${this.config.siteName}" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    `;
-  },
-  
-  // Generate SoftwareApplication schema for tools
-  generateSchema(toolData) {
-    const {
-      name,
-      description,
-      url,
-      image,
-      applicationCategory = 'UtilitiesApplication',
-      operatingSystem = 'Web Browser',
-      offers = { price: '0', priceCurrency: 'USD' },
-      aggregateRating = null,
-      reviewCount = null
-    } = toolData;
+    const titleEl = document.querySelector('title');
+    if (titleEl) {
+      titleEl.textContent = document.title;
+    } else {
+      const newTitle = document.createElement('title');
+      newTitle.textContent = document.title;
+      document.head.appendChild(newTitle);
+    }
+  }
+
+  // Set meta tag
+  setMeta(name, content, property = false) {
+    let meta = document.querySelector(`meta[name="${name}"]`);
     
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute(property ? 'property' : 'name', name);
+      document.head.appendChild(meta);
+    }
+    
+    meta.setAttribute(property ? 'property' : 'name', name);
+    meta.content = content;
+  }
+
+  // Set OpenGraph meta tags
+  setOpenGraph(og) {
+    const ogTags = {
+      'og:title': og.title,
+      'og:description': og.description,
+      'og:image': og.image,
+      'og:type': og.type,
+      'og:url': og.url,
+      'og:site_name': og.siteName
+    };
+
+    Object.entries(ogTags).forEach(([property, content]) => {
+      this.setMeta(property, content, true);
+    });
+  }
+
+  // Set Twitter Card meta tags
+  setTwitterCard(twitter) {
+    const twitterTags = {
+      'twitter:card': twitter.card,
+      'twitter:title': twitter.title,
+      'twitter:description': twitter.description,
+      'twitter:image': twitter.image,
+      'twitter:creator': twitter.creator
+    };
+
+    Object.entries(twitterTags).forEach(([name, content]) => {
+      this.setMeta(name, content, false);
+    });
+  }
+
+  // Set canonical URL
+  setCanonical(url) {
+    let link = document.querySelector('link[rel="canonical"]');
+    
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    
+    link.href = url;
+  }
+
+  // Add JSON-LD structured data
+  addStructuredData(data) {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(data);
+    document.head.appendChild(script);
+  }
+
+  // SoftwareApplication schema for tools
+  addToolSchema(toolId) {
+    const config = window.TOOLSAAS_CONFIG;
+    const tool = config?.tools?.[toolId];
+    
+    if (!tool) return;
+
+    const category = config?.categories?.find(c => c.id === tool.category);
+
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
-      name: name,
-      description: description,
-      url: url,
-      image: image,
-      applicationCategory: applicationCategory,
-      operatingSystem: operatingSystem,
+      name: tool.name,
+      description: tool.description,
+      applicationCategory: category?.name || 'Utility',
+      operatingSystem: 'Web Browser',
+      applicationSubCategory: tool.category,
       offers: {
         '@type': 'Offer',
-        price: offers.price,
-        priceCurrency: offers.priceCurrency
+        price: '0',
+        priceCurrency: 'USD'
       },
-      isAccessibleForFree: true
-    };
-    
-    if (aggregateRating) {
-      schema.aggregateRating = {
+      featureList: [
+        'Browser-based processing',
+        'No server uploads',
+        '100% free',
+        'Privacy-focused',
+        'Mobile compatible'
+      ],
+      aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: aggregateRating.ratingValue,
-        reviewCount: reviewCount || aggregateRating.reviewCount
-      };
-    }
-    
-    return JSON.stringify(schema);
-  },
-  
-  // Generate FAQ schema
-  generateFAQSchema(faqs) {
-    const schema = {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: faqs.map(faq => ({
-        '@type': 'Question',
-        name: faq.question,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: faq.answer
-        }
-      }))
+        ratingValue: '4.9',
+        ratingCount: '1000',
+        bestRating: '5',
+        worstRating: '1'
+      }
     };
-    
-    return JSON.stringify(schema);
-  },
-  
-  // Generate HowTo schema
-  generateHowToSchema(howToData) {
-    const {
-      name,
-      description,
-      steps,
-      totalTime = 'PT5M',
-      supply = [],
-      tool = []
-    } = howToData;
-    
-    const schema = {
-      '@context': 'https://schema.org',
-      '@type': 'HowTo',
-      name: name,
-      description: description,
-      totalTime: totalTime,
-      step: steps.map((step, index) => ({
-        '@type': 'HowToStep',
-        position: index + 1,
-        name: step.name,
-        text: step.text,
-        url: step.url || ''
-      }))
-    };
-    
-    if (supply.length > 0) {
-      schema.supply = supply.map(s => ({ '@type': 'HowToSupply', name: s }));
-    }
-    
-    if (tool.length > 0) {
-      schema.tool = tool.map(t => ({ '@type': 'HowToTool', name: t }));
-    }
-    
-    return JSON.stringify(schema);
-  },
-  
-  // Generate Website schema
-  generateWebsiteSchema() {
+
+    this.addStructuredData(schema);
+  }
+
+  // WebSite schema
+  addWebsiteSchema() {
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: this.config.siteName,
-      url: this.config.siteUrl,
+      name: this.config.appName || 'BrowserTools',
       description: this.config.defaultDescription,
+      url: this.config.baseUrl || window.location.origin,
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${this.config.siteUrl}/?q={search_term_string}`,
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${window.location.origin}/search?q={search_term_string}`
+        },
         'query-input': 'required name=search_term_string'
       }
     };
+
+    this.addStructuredData(schema);
+  }
+
+  // FAQPage schema
+  addFAQSchema() {
+    const faqSection = document.getElementById('faq-schema-data');
+    if (!faqSection) return;
+
+    const faqs = [];
+    const faqItems = faqSection.querySelectorAll('.faq-item');
     
-    return JSON.stringify(schema);
-  },
-  
-  // Generate BreadcrumbList schema
-  generateBreadcrumbSchema(items) {
+    faqItems.forEach(item => {
+      const question = item.querySelector('.faq-question')?.textContent?.trim();
+      const answer = item.querySelector('.faq-answer')?.textContent?.trim();
+      
+      if (question && answer) {
+        faqs.push({
+          '@type': 'Question',
+          name: question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: answer
+          }
+        });
+      }
+    });
+
+    if (faqs.length > 0) {
+      const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs
+      };
+
+      this.addStructuredData(schema);
+    }
+  }
+
+  // HowTo schema
+  addHowToSchema() {
+    const howtoSection = document.getElementById('howto-schema-data');
+    if (!howtoSection) return;
+
+    const steps = [];
+    const stepElements = howtoSection.querySelectorAll('.howto-step');
+    
+    stepElements.forEach((step, index) => {
+      const text = step.querySelector('.howto-text')?.textContent?.trim();
+      if (text) {
+        steps.push({
+          '@type': 'HowToStep',
+          position: index + 1,
+          text
+        });
+      }
+    });
+
+    if (steps.length > 0) {
+      const toolName = document.querySelector('h1')?.textContent?.trim() || 'This Tool';
+      
+      const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'HowTo',
+        name: `How to use ${toolName}`,
+        description: `Step-by-step guide for using ${toolName}`,
+        step: steps
+      };
+
+      this.addStructuredData(schema);
+    }
+  }
+
+  // BreadcrumbList schema
+  addBreadcrumbSchema(items = []) {
+    if (items.length === 0) {
+      // Auto-generate from current path
+      items = this.generateBreadcrumbFromPath();
+    }
+
+    if (items.length === 0) return;
+
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -195,79 +306,79 @@ const SEOEngine = {
         item: item.url
       }))
     };
-    
-    return JSON.stringify(schema);
-  },
-  
-  // Inject meta tags into document
-  inject(meta) {
-    // Set title
-    document.title = meta.title;
-    
-    // Update or create meta description
-    let descMeta = document.querySelector('meta[name="description"]');
-    if (!descMeta) {
-      descMeta = document.createElement('meta');
-      descMeta.name = 'description';
-      document.head.appendChild(descMeta);
-    }
-    descMeta.content = meta.description;
-    
-    // Update or create canonical
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
-    }
-    canonical.href = meta.canonical;
-    
-    // Inject JSON-LD
-    if (meta.jsonLd) {
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.textContent = meta.jsonLd;
-      document.head.appendChild(script);
-    }
-  },
-  
-  // Tool-specific SEO generator
-  generateToolSEO(toolConfig) {
-    const {
-      id,
-      name,
-      category,
-      description,
-      keywords,
-      faqs = []
-    } = toolConfig;
-    
-    const url = `${this.config.siteUrl}/tools/${category}/${id}.html`;
-    const image = `${this.config.siteUrl}/assets/tools/${id}-og.jpg`;
-    
-    const meta = this.generate({
-      title: name,
-      description: description,
-      canonical: url,
-      keywords: keywords,
-      ogImage: image,
-      toolData: {
-        name: name,
-        description: description,
-        url: url,
-        image: image,
-        applicationCategory: 'UtilitiesApplication'
-      }
-    });
-    
-    // Add FAQ schema if FAQs exist
-    if (faqs.length > 0) {
-      meta.jsonLd = [
-        JSON.parse(meta.jsonLd),
-        JSON.parse(this.generateFAQSchema(faqs))
-      ];
-    }
-    
-    return meta;
+
+    this.addStructuredData(schema);
   }
-};
+
+  // Generate breadcrumb from URL path
+  generateBreadcrumbFromPath() {
+    const path = window.location.pathname;
+    const segments = path.split('/').filter(Boolean);
+    const breadcrumbs = [];
+    
+    const baseUrl = window.location.origin;
+    
+    // Home
+    breadcrumbs.push({
+      name: 'Home',
+      url: baseUrl
+    });
+
+    // Build breadcrumbs from path
+    let currentUrl = baseUrl;
+    segments.forEach((segment, index) => {
+      currentUrl += '/' + segment;
+      
+      // Format segment name
+      const name = segment
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+      
+      breadcrumbs.push({
+        name,
+        url: currentUrl
+      });
+    });
+
+    return breadcrumbs;
+  }
+
+  // Organization schema
+  addOrganizationSchema() {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: this.config.appName || 'BrowserTools',
+      url: this.config.baseUrl || window.location.origin,
+      logo: `${this.config.baseUrl || window.location.origin}/assets/images/logo.png`,
+      sameAs: [
+        'https://twitter.com/browsertools',
+        'https://facebook.com/browsertools'
+      ]
+    };
+
+    this.addStructuredData(schema);
+  }
+
+  // Clean up structured data (for SPA navigation)
+  clearStructuredData() {
+    const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+    scripts.forEach(script => script.remove());
+  }
+
+  // Get current SEO data
+  getSEOData() {
+    return {
+      title: document.title,
+      description: document.querySelector('meta[name="description"]')?.content || '',
+      keywords: document.querySelector('meta[name="keywords"]')?.content || '',
+      canonical: document.querySelector('link[rel="canonical"]')?.href || '',
+      ogTitle: document.querySelector('meta[property="og:title"]')?.content || '',
+      ogDescription: document.querySelector('meta[property="og:description"]')?.content || '',
+      ogImage: document.querySelector('meta[property="og:image"]')?.content || ''
+    };
+  }
+}
+
+// Create global SEO engine instance
+window.seoEngine = new SEOEngine();

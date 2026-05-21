@@ -1,69 +1,168 @@
-/**
- * Image Resize Worker
- * Handles image resizing operations
- */
+/* ========================================
+   RESIZE WORKER
+   Image resizing using Canvas API
+   ======================================== */
 
-self.onmessage = function(e) {
-  const { type, data, callback } = e.data;
-  
-  if (type !== 'resize') return;
-  
-  try {
-    const { imageData, width, height, maintainAspectRatio, fitMode } = data;
-    
-    const img = new Image();
-    img.onload = () => {
-      let newWidth = width || img.width;
-      let newHeight = height || img.height;
-      
-      if (maintainAspectRatio) {
-        const ratio = Math.min(newWidth / img.width, newHeight / img.height);
-        newWidth = img.width * ratio;
-        newHeight = img.height * ratio;
-      }
-      
-      const canvas = new OffscreenCanvas(newWidth, newHeight);
-      const ctx = canvas.getContext('2d');
-      
-      // Better quality scaling
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      
-      if (fitMode === 'contain') {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, newWidth, newHeight);
-        const x = (newWidth - img.width) / 2;
-        const y = (newHeight - img.height) / 2;
-        ctx.drawImage(img, x, y);
-      } else if (fitMode === 'cover') {
-        const scale = Math.max(newWidth / img.width, newHeight / img.height);
-        const x = (newWidth - img.width * scale) / 2;
-        const y = (newHeight - img.height * scale) / 2;
-        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-      } else {
-        ctx.drawImage(img, 0, 0, newWidth, newHeight);
-      }
-      
-      canvas.convertToBlob({ type: 'image/jpeg', quality: 0.9 }).then(blob => {
-        blob.arrayBuffer().then(buffer => {
-          callback({ 
-            success: true, 
-            result: buffer,
-            width: newWidth,
-            height: newHeight
-          });
-        });
+self.onmessage = async function(e) {
+  const { type, taskId, data } = e.data;
+
+  if (type === 'process') {
+    try {
+      const result = await processResize(data);
+      self.postMessage({
+        type: 'complete',
+        taskId,
+        result
       });
-    };
-    
-    img.onerror = () => {
-      callback({ success: false, error: 'Failed to load image' });
-    };
-    
-    const blob = new Blob([imageData], { type: 'image/jpeg' });
-    img.src = URL.createObjectURL(blob);
-    
-  } catch (error) {
-    callback({ success: false, error: error.message });
+    } catch (error) {
+      self.postMessage({
+        type: 'error',
+        taskId,
+        error: error.message
+      });
+    }
   }
 };
+
+async function processResize(data) {
+  const { files, settings } = data;
+  const { 
+    width = null, 
+    height = null, 
+    fitMode = 'contain', // contain, cover, fill, stretch
+    maintainAspectRatio = true,
+    format = null,
+    quality = 0.9
+  } = settings;
+
+  if (!files || files.length === 0) {
+    throw new Error('No files provided');
+  }
+
+  const results = [];
+
+  for (const file of files) {
+    const result = await resizeFile(file, { 
+      width, 
+      height, 
+      fitMode, 
+      maintainAspectRatio,
+      format,
+      quality
+    });
+    results.push(result);
+  }
+
+  return {
+    success: true,
+    files: results,
+    count: results.length
+  };
+}
+
+async function resizeFile(file, options) {
+  const { width, height, fitMode, maintainAspectRatio, format, quality } = options;
+  const originalSize = file.data.byteLength;
+
+  // Create image from ArrayBuffer
+  const blob = new Blob([file.data], { type: file.type });
+  const img = await createImageBitmap(blob);
+
+  const originalWidth = img.width;
+  const originalHeight = img.height;
+
+  // Calculate new dimensions
+  let newWidth = width || originalWidth;
+  let newHeight = height || originalHeight;
+
+  if (maintainAspectRatio && width && height) {
+    // Calculate based on fit mode
+    const ratio = Math.min(width / originalWidth, height / originalHeight);
+    
+    if (fitMode === 'cover') {
+      const ratioMax = Math.max(width / originalWidth, height / originalHeight);
+      newWidth = Math.round(originalWidth * ratioMax);
+      newHeight = Math.round(originalHeight * ratioMax);
+    } else {
+      // contain (default)
+      newWidth = Math.round(originalWidth * ratio);
+      newHeight = Math.round(originalHeight * ratio);
+    }
+  } else if (maintainAspectRatio && width && !height) {
+    // Only width specified, maintain aspect ratio
+    newHeight = Math.round(originalHeight * width / originalWidth);
+  } else if (maintainAspectRatio && height && !width) {
+    // Only height specified, maintain aspect ratio
+    newWidth = Math.round(originalWidth * height / originalHeight);
+  }
+
+  // Create canvas and draw
+  const offCanvas = new OffscreenCanvas(newWidth, newHeight);
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.imageSmoothingEnabled = true;
+  offCtx.imageSmoothingQuality = 'high';
+  
+  // Draw with proper scaling
+  if (fitMode === 'cover' && width && height) {
+    // Scale to cover entire area, then crop
+    const scale = Math.max(width / originalWidth, height / originalHeight);
+    const scaledWidth = originalWidth * scale;
+    const scaledHeight = originalHeight * scale;
+    const offsetX = (width - scaledWidth) / 2;
+    const offsetY = (height - scaledHeight) / 2;
+    
+    offCtx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+  } else {
+    // Standard scaling
+    offCtx.drawImage(img, 0, 0, newWidth, newHeight);
+  }
+
+  // Determine output format
+  const outputFormat = format || file.type;
+
+  // Convert to blob
+  const resizedBlob = await offCanvas.convertToBlob({
+    type: outputFormat,
+    quality: quality
+  });
+
+  const resizedSize = resizedBlob.size;
+  const arrayBuffer = await resizedBlob.arrayBuffer();
+
+  return {
+    success: true,
+    data: arrayBuffer,
+    blobType: outputFormat,
+    filename: generateFilename(file.name, outputFormat),
+    originalSize,
+    resizedSize,
+    originalWidth,
+    originalHeight,
+    newWidth,
+    newHeight,
+    format: outputFormat
+  };
+}
+
+// Preset sizes for social media platforms
+const socialPresets = {
+  'instagram-post': { width: 1080, height: 1080 },
+  'instagram-story': { width: 1080, height: 1920 },
+  'facebook-post': { width: 1200, height: 630 },
+  'facebook-cover': { width: 820, height: 312 },
+  'twitter-post': { width: 1200, height: 675 },
+  'twitter-header': { width: 1500, height: 500 },
+  'youtube-thumbnail': { width: 1280, height: 720 },
+  'youtube-banner': { width: 2560, height: 1440 },
+  'linkedin-post': { width: 1200, height: 627 },
+  'linkedin-banner': { width: 1584, height: 396 },
+  'whatsapp-dp': { width: 500, height: 500 },
+  'passport-photo': { width: 600, height: 600 } // Approximate passport size
+};
+
+function generateFilename(originalName, format) {
+  const ext = format.split('/')[1] || 'jpg';
+  const baseName = originalName.replace(/\.[^/.]+$/, '');
+  const timestamp = Date.now();
+  return `${baseName}_resized_${timestamp}.${ext}`;
+}

@@ -3,319 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- SEO Meta Tags -->
-  <title>Compress Image - Free Online Image Compressor | BrowserTools</title>
-  <meta name="description" content="Compress images online for free without losing quality. Reduce JPG, PNG, WebP file sizes instantly in your browser. No upload required." />
-  <link rel="canonical" href="https://browsertools.app/tools/image/compress-image.html" />
-  
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://browsertools.app/tools/image/compress-image.html" />
-  <meta property="og:title" content="Compress Image - Free Online Image Compressor" />
-  <meta property="og:description" content="Compress images online for free without losing quality." />
-  <meta property="og:image" content="https://browsertools.app/assets/og-compress-image.jpg" />
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Compress Image - Free Online Image Compressor" />
-  <meta name="twitter:description" content="Compress images online for free without losing quality." />
-  
-  <!-- Fonts -->
+  <title>Compress Image - Reduce Image Size Online | BrowserTools</title>
+  <meta name="description" content="Compress images online for free without losing quality. Reduce JPG, PNG, WebP file sizes instantly in your browser. No uploads, 100% private.">
+  <meta name="keywords" content="compress image, reduce image size, image optimizer, jpg compressor, png compressor, webp compressor, free online tool">
+  <link rel="canonical" href="https://browsertools.com/tools/image/compress-image.html">
+  <meta property="og:title" content="Compress Image - Reduce Image Size Online">
+  <meta property="og:description" content="Compress images online for free without losing quality. No uploads required.">
+  <meta property="og:image" content="/assets/images/og-compress-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            display: ['Space Grotesk', 'system-ui', 'sans-serif']
-          },
-          colors: {
-            primary: '#6C5CE7',
-            secondary: '#00C2FF',
-            accent: '#FF6B6B'
-          }
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], display: ['Space Grotesk', 'system-ui', 'sans-serif'] },
+          colors: { primary: '#6C5CE7', secondary: '#00C2FF', accent: '#FF6B6B', background: '#F8FAFC', dark: '#111827' }
         }
       }
     }
   </script>
-  
-  <!-- Custom Styles -->
   <style>
-    .glass-card {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    .dark .glass-card {
-      background: rgba(31, 41, 55, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .gradient-text {
-      background: linear-gradient(135deg, #6C5CE7 0%, #00C2FF 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .upload-area { transition: all 0.3s ease; }
-    .upload-area.drag-over {
-      transform: scale(1.02);
-      border-color: #6C5CE7;
-      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
-    }
-    .progress-bar { transition: width 0.3s ease; }
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
+    .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+    .dark .glass { background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .gradient-primary { background: linear-gradient(135deg, #6C5CE7 0%, #00C2FF 100%); }
+    .gradient-text { background: linear-gradient(135deg, #6C5CE7 0%, #00C2FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     .animate-float { animation: float 3s ease-in-out infinite; }
+    .drag-over { border-color: #6C5CE7 !important; background: rgba(108, 92, 231, 0.05) !important; }
+    .progress-bar { transition: width 0.3s ease; }
+    .progress-bar.active { background: linear-gradient(90deg, #6C5CE7, #00C2FF); background-size: 200% 100%; animation: shimmer 2s infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .file-preview { position: relative; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .dark .file-preview { background: #1f2937; }
+    .file-preview img { width: 100%; height: 150px; object-fit: cover; }
+    .remove-file-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+    .remove-file-btn:hover { background: #FF6B6B; color: white; }
+    .tool-card { transition: all 0.3s ease; }
+    .tool-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(108, 92, 231, 0.15); }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
-
-  <!-- Navigation -->
-  <nav class="sticky top-0 z-40 glass-card border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <a href="/" class="font-display font-bold text-xl gradient-text">BrowserTools</a>
-        <div class="hidden md:flex items-center gap-6">
-          <a href="/tools/pdf/" class="text-gray-600 dark:text-gray-300 hover:text-primary">PDF Tools</a>
-          <a href="/tools/image/" class="text-gray-600 dark:text-gray-300 hover:text-primary">Image Tools</a>
-          <a href="/guides/" class="text-gray-600 dark:text-gray-300 hover:text-primary">Guides</a>
-          <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">🌙</button>
+<body class="bg-background dark:bg-dark text-gray-900 dark:text-gray-100 min-h-screen">
+  <nav class="sticky top-0 z-50 glass border-b border-gray-200 dark:border-gray-800">
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        <a href="/" class="text-2xl font-display font-bold gradient-text">BrowserTools</a>
+        <div class="hidden md:flex items-center space-x-6">
+          <a href="/categories/pdf.html" class="hover:text-primary transition">PDF Tools</a>
+          <a href="/categories/image.html" class="hover:text-primary transition">Image Tools</a>
+          <a href="/guides/" class="hover:text-primary transition">Guides</a>
+          <a href="/about.html" class="hover:text-primary transition">About</a>
         </div>
+        <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">🌙</button>
       </div>
     </div>
   </nav>
-
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    
-    <!-- Breadcrumb -->
-    <nav id="breadcrumb" class="mb-6" aria-label="Breadcrumb"></nav>
-    
-    <!-- Category Nav -->
-    <div id="categoryNav" class="mb-8"></div>
-
-    <!-- Tool Header -->
-    <div class="text-center mb-12">
-      <h1 class="font-display text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-        Compress Image
-      </h1>
-      <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-        Reduce image file size while maintaining quality. Compress JPG, PNG, and WebP images instantly in your browser.
-      </p>
+  <div id="breadcrumb" class="container mx-auto px-4 py-4"></div>
+  <main class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+      <h1 id="tool-title" class="text-4xl md:text-5xl font-display font-bold mb-4 gradient-text">Compress Image</h1>
+      <p id="tool-description" class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Reduce image file size while maintaining quality. Compress JPG, PNG, and WebP images instantly in your browser.</p>
     </div>
-
-    <!-- Tool Interface -->
-    <div class="max-w-3xl mx-auto">
-      
-      <!-- Upload Area -->
-      <div id="uploadArea" class="upload-area glass-card rounded-2xl p-12 text-center cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-primary transition-all">
-        <input type="file" id="fileInput" class="hidden" accept="image/jpeg,image/png,image/webp" />
-        
+    <div class="max-w-4xl mx-auto">
+      <div id="drop-zone" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5">
+        <input type="file" id="file-input" class="hidden" accept="image/jpeg,image/png,image/webp">
         <div class="space-y-4">
-          <div class="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-4xl animate-float">
-            🖼️
-          </div>
-          
-          <div>
-            <p class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Drop image here or click to upload
-            </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              Supports JPG, PNG, WebP • Max 100MB
-            </p>
-          </div>
-          
-          <div class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
-            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Drag & Drop</span>
-            <span>•</span>
-            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Click Upload</span>
-            <span>•</span>
-            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Paste (Ctrl+V)</span>
-          </div>
+          <div class="text-6xl animate-float">🖼️</div>
+          <div><p class="text-xl font-semibold mb-2">Drag & drop image here</p><p class="text-gray-500 dark:text-gray-400">or click to browse</p></div>
+          <p class="text-sm text-gray-400">Supports paste from clipboard (Ctrl+V)</p>
+          <button class="gradient-primary text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition shadow-lg hover:shadow-xl">Select Image</button>
         </div>
       </div>
-
-      <!-- Preview Container -->
-      <div id="previewContainer" class="hidden mt-8">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Selected Image</h3>
-        <div class="grid grid-cols-1 gap-4"></div>
-      </div>
-
-      <!-- Settings Panel -->
-      <div id="settingsContainer" class="hidden mt-8 glass-card rounded-xl p-6">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Compression Settings</h3>
-        <div class="space-y-4">
-          <div class="setting-row">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Quality: <span id="qualityValue">80</span>%
-            </label>
-            <input type="range" id="setting-quality" min="10" max="100" value="80" 
-                   class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
-                   oninput="document.getElementById('qualityValue').textContent = this.value" />
-            <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-              <span>Lower Quality</span>
-              <span>Higher Quality</span>
-            </div>
-          </div>
-          
-          <div class="setting-row">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Output Format
-            </label>
-            <select id="setting-format" class="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-              <option value="jpeg">JPG</option>
-              <option value="png">PNG</option>
-              <option value="webp">WebP</option>
-            </select>
-          </div>
+      <div id="file-previews" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"></div>
+      <div id="settings-container" class="mt-8 p-6 glass rounded-xl">
+        <h3 class="text-lg font-semibold mb-4">Settings</h3>
+        <div id="tool-settings" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-medium mb-2">Quality: <span id="quality-value">80</span>%</label><input type="range" id="quality-setting" data-setting="quality" min="10" max="100" value="80" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"></div>
+          <div><label class="block text-sm font-medium mb-2">Output Format</label><select id="format-setting" data-setting="format" class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"><option value="original">Original Format</option><option value="image/jpeg">JPEG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select></div>
+          <div><label class="block text-sm font-medium mb-2">Max Width (optional)</label><input type="number" id="maxwidth-setting" data-setting="maxWidth" placeholder="e.g., 1920" class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"></div>
+          <div><label class="block text-sm font-medium mb-2">Max Height (optional)</label><input type="number" id="maxheight-setting" data-setting="maxHeight" placeholder="e.g., 1080" class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"></div>
         </div>
       </div>
-
-      <!-- Process Button -->
-      <div id="processBtn" class="hidden mt-8">
-        <button class="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5">
-          Compress Image
-        </button>
-      </div>
-
-      <!-- Progress Section -->
-      <div id="progressSection" class="hidden mt-8">
-        <div class="glass-card rounded-xl p-6">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Compressing...</span>
-            <span id="progressPercent" class="text-sm font-medium text-primary">0%</span>
-          </div>
-          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-            <div id="progressBar" class="progress-bar h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 0%"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Download Section -->
-      <div id="downloadSection" class="hidden mt-8">
-        <div class="glass-card rounded-xl p-6">
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">✅ Compression Complete!</h3>
-          <div id="downloadItems" class="space-y-3"></div>
-          <button onclick="resetTool()" class="mt-6 w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-            Compress Another Image
-          </button>
-        </div>
-      </div>
-
+      <div class="mt-8 text-center"><button id="process-btn" disabled class="gradient-primary text-white px-12 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"><span class="btn-text">Compress Image</span><span class="btn-loading hidden">Processing...</span></button></div>
+      <div id="progress-section" class="mt-8 hidden"><div class="flex justify-between text-sm mb-2"><span>Progress</span><span id="progress-text">0%</span></div><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden"><div id="progress-bar" class="progress-bar h-full rounded-full w-0"></div></div></div>
+      <div id="result-section" class="mt-8 hidden"><div class="glass rounded-xl p-6"><h3 class="text-xl font-semibold mb-4">Result</h3><div id="result-preview" class="mb-6"></div><div id="result-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div><div class="flex flex-col md:flex-row gap-4 justify-center"><button id="download-btn" class="gradient-primary text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition shadow-lg">⬇️ Download</button><button id="reset-btn" class="border-2 border-gray-300 dark:border-gray-700 px-8 py-3 rounded-xl font-semibold hover:border-primary transition">🔄 Start Over</button></div></div></div>
+      <div id="error-section" class="mt-8 hidden"><div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4"><p class="text-red-600 dark:text-red-400 flex items-center gap-2"><span>⚠️</span><span id="error-message">Error occurred</span></p></div></div>
     </div>
-
-    <!-- Related Tools -->
-    <div id="relatedTools" class="mt-16"></div>
-
-    <!-- Related Guides -->
-    <div id="relatedGuides" class="mt-16"></div>
-
-    <!-- FAQ Section -->
-    <div class="mt-16 max-w-3xl mx-auto">
-      <h2 class="font-display text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-        Frequently Asked Questions
-      </h2>
-      <div id="faqContainer" class="space-y-4">
-        <details class="group glass-card rounded-xl">
-          <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
-            <span class="font-medium text-gray-900 dark:text-white">Is this image compressor free?</span>
-            <span class="text-primary group-open:rotate-45 transition-transform">+</span>
-          </summary>
-          <div class="px-4 pb-4 text-gray-600 dark:text-gray-400">
-            Yes, our image compressor is completely free to use with no limitations or watermarks.
-          </div>
-        </details>
-        <details class="group glass-card rounded-xl">
-          <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
-            <span class="font-medium text-gray-900 dark:text-white">Are my images uploaded to a server?</span>
-            <span class="text-primary group-open:rotate-45 transition-transform">+</span>
-          </summary>
-          <div class="px-4 pb-4 text-gray-600 dark:text-gray-400">
-            No, all image processing happens entirely in your browser. Your images never leave your device, ensuring complete privacy and security.
-          </div>
-        </details>
-        <details class="group glass-card rounded-xl">
-          <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
-            <span class="font-medium text-gray-900 dark:text-white">What image formats are supported?</span>
-            <span class="text-primary group-open:rotate-45 transition-transform">+</span>
-          </summary>
-          <div class="px-4 pb-4 text-gray-600 dark:text-gray-400">
-            We support JPG, PNG, and WebP formats for both input and output. You can convert between these formats while compressing.
-          </div>
-        </details>
-        <details class="group glass-card rounded-xl">
-          <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
-            <span class="font-medium text-gray-900 dark:text-white">How much can I reduce image file size?</span>
-            <span class="text-primary group-open:rotate-45 transition-transform">+</span>
-          </summary>
-          <div class="px-4 pb-4 text-gray-600 dark:text-gray-400">
-            Depending on the quality setting, you can reduce file size by 50-90% while maintaining good visual quality. Lower quality settings produce smaller files.
-          </div>
-        </details>
-      </div>
-    </div>
-
+    <div id="related-tools" class="mt-16"></div>
+    <section id="faq-section" class="mt-16 max-w-4xl mx-auto"><h2 class="text-3xl font-display font-bold text-center mb-8">Frequently Asked Questions</h2><div id="faq-schema-data" class="space-y-4"></div></section>
+    <section id="howto-section" class="mt-16 max-w-4xl mx-auto"><h2 class="text-3xl font-display font-bold text-center mb-8">How to Compress Images</h2><div id="howto-schema-data" class="space-y-4"></div></section>
   </main>
-
-  <!-- Footer -->
-  <footer class="border-t border-gray-200 dark:border-gray-800 mt-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
+    <div class="container mx-auto px-4 py-12">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Tools</h4>
-          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li><a href="/tools/pdf/" class="hover:text-primary">PDF Tools</a></li>
-            <li><a href="/tools/image/" class="hover:text-primary">Image Tools</a></li>
-            <li><a href="/tools/compression/" class="hover:text-primary">Compression</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Resources</h4>
-          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li><a href="/guides/" class="hover:text-primary">Guides</a></li>
-            <li><a href="/about.html" class="hover:text-primary">About</a></li>
-            <li><a href="/contact.html" class="hover:text-primary">Contact</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Legal</h4>
-          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li><a href="/legal/privacy-policy.html" class="hover:text-primary">Privacy Policy</a></li>
-            <li><a href="/legal/terms-of-service.html" class="hover:text-primary">Terms of Service</a></li>
-            <li><a href="/legal/cookie-policy.html" class="hover:text-primary">Cookie Policy</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Connect</h4>
-          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li><a href="#" class="hover:text-primary">Twitter</a></li>
-            <li><a href="#" class="hover:text-primary">GitHub</a></li>
-            <li><a href="#" class="hover:text-primary">Discord</a></li>
-          </ul>
-        </div>
+        <div><h4 class="font-semibold mb-4">Product</h4><ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><a href="/" class="hover:text-primary">All Tools</a></li><li><a href="/categories/pdf.html" class="hover:text-primary">PDF Tools</a></li><li><a href="/categories/image.html" class="hover:text-primary">Image Tools</a></li></ul></div>
+        <div><h4 class="font-semibold mb-4">Resources</h4><ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><a href="/guides/" class="hover:text-primary">Guides</a></li><li><a href="/about.html" class="hover:text-primary">About</a></li><li><a href="/contact.html" class="hover:text-primary">Contact</a></li></ul></div>
+        <div><h4 class="font-semibold mb-4">Legal</h4><ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><a href="/legal/privacy-policy.html" class="hover:text-primary">Privacy Policy</a></li><li><a href="/legal/terms-of-service.html" class="hover:text-primary">Terms of Service</a></li><li><a href="/legal/cookie-policy.html" class="hover:text-primary">Cookie Policy</a></li></ul></div>
+        <div><h4 class="font-semibold mb-4">Connect</h4><ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><a href="#" class="hover:text-primary">Twitter</a></li><li><a href="#" class="hover:text-primary">GitHub</a></li><li><a href="#" class="hover:text-primary">Discord</a></li></ul></div>
       </div>
-      <div class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-        <p>© 2024 BrowserTools. All rights reserved. 100% browser-based processing.</p>
-      </div>
+      <div class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500"><p>&copy; 2024 BrowserTools. All rights reserved.</p><p class="mt-2">100% browser-based. No files are uploaded to any server.</p></div>
     </div>
   </footer>
-
-  <!-- Toast Container -->
-  <div id="toastContainer"></div>
-
-  <!-- Core Scripts -->
-  <script src="/js/core/utils.js"></script>
-  <script src="/js/core/app.js"></script>
+  <div id="toast-container"></div>
+  <script src="/js/core/config.js"></script>
+  <script src="/js/core/state.js"></script>
   <script src="/js/core/upload-engine.js"></script>
   <script src="/js/core/worker-manager.js"></script>
   <script src="/js/core/tool-engine.js"></script>
@@ -323,249 +117,54 @@
   <script src="/js/ui/components.js"></script>
   <script src="/js/seo/seo-engine.js"></script>
   <script src="/js/seo/internal-links.js"></script>
-
-  <!-- Tool Script -->
   <script>
-    // Tool state
-    let currentFile = null;
-    let processedBlob = null;
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', async () => {
-      await App.init();
-      
-      // Setup upload
-      const uploadArea = document.getElementById('uploadArea');
-      const fileInput = document.getElementById('fileInput');
-      
-      uploadArea.addEventListener('click', () => fileInput.click());
-      
-      fileInput.addEventListener('change', handleFileSelect);
-      
-      // Drag and drop
-      uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('drag-over');
-      });
-      
-      uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('drag-over');
-      });
-      
-      uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) handleFile(files[0]);
-      });
-      
-      // Paste support
-      document.addEventListener('paste', (e) => {
-        const items = e.clipboardData?.items;
-        if (!items) return;
-        
-        for (let item of items) {
-          if (item.type.startsWith('image/')) {
-            handleFile(item.getAsFile());
-            break;
+    const TOOL_CONFIG = {
+      id: 'compress-image',
+      name: 'Compress Image',
+      description: 'Reduce image file size while maintaining quality.',
+      category: 'image-compression',
+      icon: '🗜️',
+      allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      maxFiles: 1,
+      maxSize: 50 * 1024 * 1024,
+      workerType: 'compress',
+      settings: { quality: 0.8, format: 'original', maxWidth: null, maxHeight: null },
+      faqs: [
+        { question: 'Is this image compressor free?', answer: 'Yes, our image compression tool is 100% free to use with no limits.' },
+        { question: 'Are my images uploaded to a server?', answer: 'No, all image processing happens locally in your browser. Your images never leave your device.' },
+        { question: 'What image formats are supported?', answer: 'We support JPEG, PNG, and WebP formats for both input and output.' },
+        { question: 'How much can I reduce the file size?', answer: 'Depending on the image, you can typically reduce file size by 50-90% while maintaining good visual quality.' }
+      ],
+      howToSteps: ['Upload your image by dragging and dropping or clicking the upload area', 'Adjust the quality slider to control compression level', 'Optionally set maximum width/height to resize the image', 'Click "Compress Image" to process', 'Download your compressed image instantly']
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('tool-title').textContent = TOOL_CONFIG.name;
+      document.getElementById('tool-description').textContent = TOOL_CONFIG.description;
+      window.seoEngine.init({ title: TOOL_CONFIG.name + ' - Reduce Image Size Online', description: TOOL_CONFIG.description, toolId: TOOL_CONFIG.id });
+      const faqContainer = document.getElementById('faq-schema-data');
+      faqContainer.innerHTML = TOOL_CONFIG.faqs.map(faq => `<div class="faq-item glass rounded-xl p-6"><h3 class="font-semibold text-lg mb-2 faq-question">${faq.question}</h3><p class="text-gray-600 dark:text-gray-400 faq-answer">${faq.answer}</p></div>`).join('');
+      const howtoContainer = document.getElementById('howto-schema-data');
+      howtoContainer.innerHTML = TOOL_CONFIG.howToSteps.map((step, index) => `<div class="howto-step glass rounded-xl p-6 flex gap-4"><div class="flex-shrink-0 w-10 h-10 rounded-full gradient-primary text-white flex items-center justify-center font-bold">${index + 1}</div><div class="flex-grow"><p class="howto-text">${step}</p></div></div>`).join('');
+      window.internalLinks.init({ toolId: TOOL_CONFIG.id, categoryId: TOOL_CONFIG.category });
+      document.getElementById('quality-setting').addEventListener('input', function(e) { document.getElementById('quality-value').textContent = e.target.value; });
+      window.toolEngine = new ToolEngine({
+        ...TOOL_CONFIG,
+        onProcess: async (files, settings, onProgress) => {
+          if (settings.format === 'original') settings.format = files[0].file.type;
+          settings.quality = settings.quality / 100;
+          const result = await window.workerManager.process(TOOL_CONFIG.workerType, { files: files.map(f => ({ name: f.name, type: f.type, data: await toolEngine.fileToArrayBuffer(f.file) })), settings }, onProgress);
+          if (result.success && result.data) {
+            result.blob = new Blob([result.data], { type: result.blobType });
+            document.getElementById('result-stats').innerHTML = `<div class="text-center p-4 glass rounded-xl"><p class="text-sm text-gray-500">Original</p><p class="text-lg font-bold">${formatFileSize(result.originalSize)}</p></div><div class="text-center p-4 glass rounded-xl"><p class="text-sm text-gray-500">Compressed</p><p class="text-lg font-bold text-green-600">${formatFileSize(result.compressedSize)}</p></div><div class="text-center p-4 glass rounded-xl"><p class="text-sm text-gray-500">Reduction</p><p class="text-lg font-bold text-primary">${result.compressionRatio}%</p></div><div class="text-center p-4 glass rounded-xl"><p class="text-sm text-gray-500">Dimensions</p><p class="text-lg font-bold">${result.width}×${result.height}</p></div>`;
           }
+          return result;
         }
       });
-      
-      // Process button
-      document.getElementById('processBtn').querySelector('button').addEventListener('click', processImage);
-      
-      // Theme toggle
-      setupThemeToggle();
-      
-      // Inject internal links
-      InternalLinks.injectIntoPage('compress-image');
-      
-      // SEO Schema
-      injectSchema();
+      document.getElementById('download-btn')?.addEventListener('click', () => { if (window.toolEngine.state.result?.blob) { window.downloadEngine.download(window.toolEngine.state.result.filename, window.toolEngine.state.result.blob); } });
+      document.getElementById('theme-toggle')?.addEventListener('click', () => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); });
+      if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
     });
-
-    function handleFileSelect(e) {
-      const files = e.target.files;
-      if (files.length > 0) handleFile(files[0]);
-    }
-
-    function handleFile(file) {
-      if (!file.type.startsWith('image/')) {
-        Toast.error('Please select an image file');
-        return;
-      }
-      
-      currentFile = file;
-      
-      // Show preview
-      const previewContainer = document.getElementById('previewContainer');
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        previewContainer.innerHTML = `
-          <div class="glass-card rounded-xl p-4">
-            <img src="${e.target.result}" alt="Preview" class="max-h-64 mx-auto rounded-lg" />
-            <div class="mt-4 flex items-center justify-between">
-              <div>
-                <p class="font-medium text-gray-900 dark:text-white">${file.name}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">${Utils.formatFileSize(file.size)}</p>
-              </div>
-              <button onclick="resetTool()" class="text-red-500 hover:text-red-600 text-sm">Remove</button>
-            </div>
-          </div>
-        `;
-        previewContainer.classList.remove('hidden');
-        
-        // Show settings and process button
-        document.getElementById('settingsContainer').classList.remove('hidden');
-        document.getElementById('processBtn').classList.remove('hidden');
-      };
-      
-      reader.readAsDataURL(file);
-    }
-
-    async function processImage() {
-      if (!currentFile) {
-        Toast.error('No file selected');
-        return;
-      }
-      
-      // Get settings
-      const quality = parseInt(document.getElementById('setting-quality').value) / 100;
-      const format = document.getElementById('setting-format').value;
-      
-      // Show progress
-      document.getElementById('progressSection').classList.remove('hidden');
-      document.getElementById('processBtn').classList.add('hidden');
-      
-      const progressBar = document.getElementById('progressBar');
-      const progressPercent = document.getElementById('progressPercent');
-      
-      try {
-        // Read file
-        const arrayBuffer = await UploadEngine.readAsArrayBuffer(currentFile);
-        
-        // Update progress
-        progressBar.style.width = '20%';
-        progressPercent.textContent = '20%';
-        
-        // Process with worker
-        const result = await WorkerManager.process('compress', {
-          files: [arrayBuffer],
-          filenames: [currentFile.name],
-          settings: { quality, format }
-        }, (progress) => {
-          const percent = Math.min(90, 20 + (progress * 0.7));
-          progressBar.style.width = `${percent}%`;
-          progressPercent.textContent = `${Math.round(percent)}%`;
-        });
-        
-        // Complete
-        progressBar.style.width = '100%';
-        progressPercent.textContent = '100%';
-        
-        if (result.success && result.files && result.files[0]) {
-          const outputFile = result.files[0];
-          processedBlob = new Blob([outputFile.data], { type: outputFile.mimeType });
-          
-          // Show download
-          showDownload(outputFile);
-        } else {
-          throw new Error('Processing failed');
-        }
-        
-      } catch (error) {
-        console.error('Error:', error);
-        Toast.error(error.message || 'Failed to compress image');
-        document.getElementById('progressSection').classList.add('hidden');
-        document.getElementById('processBtn').classList.remove('hidden');
-      }
-    }
-
-    function showDownload(file) {
-      const downloadSection = document.getElementById('downloadSection');
-      const downloadItems = document.getElementById('downloadItems');
-      
-      const url = URL.createObjectURL(processedBlob);
-      const originalSize = Utils.formatFileSize(currentFile.size);
-      const compressedSize = Utils.formatFileSize(file.size);
-      const reduction = Math.round((1 - file.size / currentFile.size) * 100);
-      
-      downloadItems.innerHTML = `
-        <div class="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
-          <div>
-            <p class="font-medium text-gray-900 dark:text-white">${file.name}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              ${originalSize} → <span class="text-green-600 font-semibold">${compressedSize}</span>
-              <span class="text-green-600 ml-2">(${reduction}% smaller)</span>
-            </p>
-          </div>
-          <a href="${url}" download="${file.name}" 
-             class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl hover:shadow-lg transition-all">
-            Download
-          </a>
-        </div>
-      `;
-      
-      downloadSection.classList.remove('hidden');
-      document.getElementById('progressSection').classList.add('hidden');
-      
-      Toast.success('Image compressed successfully!');
-    }
-
-    function resetTool() {
-      currentFile = null;
-      processedBlob = null;
-      
-      document.getElementById('previewContainer').classList.add('hidden');
-      document.getElementById('settingsContainer').classList.add('hidden');
-      document.getElementById('processBtn').classList.add('hidden');
-      document.getElementById('downloadSection').classList.add('hidden');
-      document.getElementById('progressSection').classList.add('hidden');
-      
-      document.getElementById('fileInput').value = '';
-    }
-
-    function setupThemeToggle() {
-      const themeToggle = document.getElementById('themeToggle');
-      themeToggle.addEventListener('click', () => {
-        document.documentElement.classList.toggle('dark');
-        const isDark = document.documentElement.classList.contains('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        themeToggle.textContent = isDark ? '☀️' : '🌙';
-      });
-      
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-        themeToggle.textContent = '☀️';
-      }
-    }
-
-    function injectSchema() {
-      const schema = {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Compress Image",
-        "description": "Free online image compressor. Reduce JPG, PNG, WebP file sizes without losing quality.",
-        "url": "https://browsertools.app/tools/image/compress-image.html",
-        "applicationCategory": "UtilitiesApplication",
-        "operatingSystem": "Web Browser",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "isAccessibleForFree": true
-      };
-      
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.textContent = JSON.stringify(schema);
-      document.head.appendChild(script);
-    }
+    function formatFileSize(bytes) { if (bytes === 0) return '0 Bytes'; const k = 1024; const sizes = ['Bytes', 'KB', 'MB', 'GB']; const i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
   </script>
-
 </body>
 </html>
