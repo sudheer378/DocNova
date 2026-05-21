@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Main Sitemap -->
+  <sitemap>
+    <loc>https://yourdomain.com/sitemap-pages.xml</loc>
+    <lastmod>2024-01-15T00:00:00+00:00</lastmod>
+  </sitemap>
+  
+  <!-- Tools Sitemap -->
+  <sitemap>
+    <loc>https://yourdomain.com/sitemap-tools.xml</loc>
+    <lastmod>2024-01-15T00:00:00+00:00</lastmod>
+  </sitemap>
+  
+  <!-- Guides Sitemap -->
+  <sitemap>
+    <loc>https://yourdomain.com/sitemap-guides.xml</loc>
+    <lastmod>2024-01-15T00:00:00+00:00</lastmod>
+  </sitemap>
+</sitemapindex>

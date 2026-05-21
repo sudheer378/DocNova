@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Dynamic Meta Tags (Replace {{TOOL_NAME}}, {{DESCRIPTION}}, etc.) -->
+  <title>{{TOOL_NAME}} - Free Online Tool | ToolsHub</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <meta name="keywords" content="{{KEYWORDS}}">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://yourdomain.com{{TOOL_URL}}">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yourdomain.com{{TOOL_URL}}">
+  <meta property="og:title" content="{{TOOL_NAME}} - Free Online Tool">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Structured Data - SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "{{TOOL_NAME}}",
+    "applicationCategory": "ProductivityApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "{{DESCRIPTION}}"
+  }
+  </script>
+  
+  <!-- Structured Data - BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://yourdomain.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "{{CATEGORY_NAME}}",
+        "item": "https://yourdomain.com/tools/{{CATEGORY_SLUG}}/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{TOOL_NAME}}",
+        "item": "https://yourdomain.com{{TOOL_URL}}"
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="glass-card sticky top-0 z-50 mx-4 mt-4">
+    <div class="container flex items-center justify-between py-4">
+      <a href="/" class="flex items-center gap-2">
+        <span class="text-xl font-bold gradient-text">ToolsHub</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="/" class="text-gray-600 hover:text-primary transition">Home</a>
+        <a href="/tools/{{CATEGORY_SLUG}}/" class="text-gray-600 hover:text-primary transition">{{CATEGORY_NAME}}</a>
+        <a href="#how-to-use" class="text-gray-600 hover:text-primary transition">How to Use</a>
+      </div>
+      <a href="/" class="btn btn-primary">All Tools</a>
+    </div>
+  </nav>
+
+  <!-- Tool Section -->
+  <section class="section">
+    <div class="container max-w-4xl mx-auto">
+      <!-- Tool Header -->
+      <div class="text-center mb-8">
+        <h1 class="mb-2">{{TOOL_NAME}}</h1>
+        <p class="text-gray-600">{{DESCRIPTION}}</p>
+      </div>
+      
+      <!-- Upload Area -->
+      <div class="glass-card p-8 mb-8">
+        <div class="upload-area" id="drop-zone">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <h3 class="text-xl font-semibold mb-2">Drag & Drop Files Here</h3>
+          <p class="text-gray-500 mb-4">or click to browse from your device</p>
+          <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+            Select Files
+          </button>
+          <input type="file" id="file-input" class="hidden" multiple accept="{{ACCEPT_FORMATS}}">
+        </div>
+        
+        <!-- File Preview -->
+        <div id="file-preview" class="hidden mt-6">
+          <div class="flex items-center justify-between p-4 bg-white rounded-lg">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium" id="file-name">filename.pdf</p>
+                <p class="text-sm text-gray-500" id="file-size">2.5 MB</p>
+              </div>
+            </div>
+            <button class="text-red-500 hover:text-red-700" onclick="removeFile()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Progress -->
+        <div id="progress-container" class="hidden mt-6">
+          <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <p class="text-center text-sm text-gray-500 progress-text">0%</p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div id="action-buttons" class="hidden mt-6 flex gap-4 justify-center">
+          <button class="btn btn-primary" onclick="processFile()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            Process File
+          </button>
+        </div>
+        
+        <!-- Download Button -->
+        <div id="download-section" class="hidden mt-6 text-center">
+          <a id="download-btn" class="btn btn-primary" download>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Download Result
+          </a>
+          <button class="btn btn-secondary ml-4" onclick="resetTool()">
+            Process Another File
+          </button>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="loading" class="hidden mt-6 text-center">
+          <div class="spinner mx-auto mb-4"></div>
+          <p class="text-gray-600">Processing your file...</p>
+        </div>
+      </div>
+      
+      <!-- How to Use -->
+      <div id="how-to-use" class="glass-card p-8 mb-8">
+        <h2 class="mb-4">How to Use {{TOOL_NAME}}</h2>
+        <ol class="space-y-4">
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">1</span>
+            <div>
+              <h4 class="font-semibold">Upload your file</h4>
+              <p class="text-gray-600">Drag and drop or click to select files from your device.</p>
+            </div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">2</span>
+            <div>
+              <h4 class="font-semibold">Configure settings</h4>
+              <p class="text-gray-600">Adjust any available options for your conversion.</p>
+            </div>
+          </li>
+          <li class="flex gap-4">
+            <span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">3</span>
+            <div>
+              <h4 class="font-semibold">Download result</h4>
+              <p class="text-gray-600">Get your processed file instantly. No upload required.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+      
+      <!-- Related Tools -->
+      <div class="mb-8">
+        <h2 class="mb-4">Related Tools</h2>
+        <div class="tool-grid" id="related-tools">
+          <!-- Related tools will be injected by JS -->
+        </div>
+      </div>
+      
+      <!-- SEO Content -->
+      <div class="glass-card p-8">
+        <h2 class="mb-4">About {{TOOL_NAME}}</h2>
+        <div class="prose text-gray-600">
+          <p>{{SEO_CONTENT}}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-8">
+    <div class="container text-center">
+      <p class="text-gray-400">&copy; 2024 ToolsHub. All processing happens in your browser.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/js/main.js"></script>
+  <script src="/js/tool-{{TOOL_ID}}.js"></script>
+</body>
+</html>
