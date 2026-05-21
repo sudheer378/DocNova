@@ -1,62 +1,19 @@
 User-agent: *
 Allow: /
-
-# Disallow admin and private areas (if any)
 Disallow: /admin/
-Disallow: /private/
-Disallow: /config/
-Disallow: /datasets/
+Disallow: /api/
 
-# Allow all static assets
-Allow: /assets/
-Allow: /css/
-Allow: /js/
-Allow: /workers/
-Allow: /tools/
-Allow: /guides/
+Sitemap: https://browsertools.app/sitemap.xml
 
-# Sitemap location
-Sitemap: https://yourdomain.com/sitemap.xml
-Sitemap: https://yourdomain.com/sitemap-tools.xml
-Sitemap: https://yourdomain.com/sitemap-guides.xml
-
-# Crawl delay for politeness (optional)
+# Crawl-delay for polite crawling
 Crawl-delay: 1
 
-# Block common bots that waste crawl budget
-User-agent: MJ12bot
-Disallow: /
-
+# Block common bad bots
 User-agent: AhrefsBot
 Disallow: /
 
 User-agent: SemrushBot
 Disallow: /
 
-User-agent: DotBot
+User-agent: MJ12bot
 Disallow: /
-
-User-agent: BLEXBot
-Disallow: /
-
-# Block AI scrapers if desired (optional - may impact AI search visibility)
-# User-agent: GPTBot
-# Disallow: /
-
-# User-agent: CCBot
-# Disallow: /
-
-# User-agent: Google-Extended
-# Disallow: /
-
-# User-agent: PerplexityBot
-# Disallow: /
-
-# Common blocklist for spam bots
-User-agent: *
-Disallow: /*?*
-Disallow: /*.json$
-Disallow: /*.xml$
-Disallow: /build/
-Disallow: /seo/
-Disallow: /templates/
