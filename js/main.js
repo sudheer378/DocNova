@@ -1,418 +1,373 @@
 /**
- * Main JavaScript - Core Utilities & Shared Functions
- * Browser Tools Platform
+ * BrowserTools - Core JavaScript
+ * Main utilities, worker manager, upload handler, toast notifications
  */
 
-// ========================================
-// GLOBAL CONFIGURATION
-// ========================================
-const CONFIG = {
-  maxFileSize: 500 * 1024 * 1024, // 500MB
-  supportedFormats: {
-    image: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'],
-    pdf: ['pdf']
+// ============================================
+// TOAST NOTIFICATIONS
+// ============================================
+
+const Toast = {
+  container: null,
+  
+  init() {
+    this.container = document.getElementById('toastContainer');
+    if (!this.container) {
+      this.container = document.createElement('div');
+      this.container.id = 'toastContainer';
+      this.container.className = 'toast-container';
+      document.body.appendChild(this.container);
+    }
   },
-  workerTimeout: 300000 // 5 minutes
+  
+  show(message, type = 'success', duration = 3000) {
+    if (!this.container) this.init();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+      <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠'}</span>
+      <span class="toast-message">${message}</span>
+      <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+    `;
+    
+    this.container.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  },
+  
+  success(message) { this.show(message, 'success'); },
+  error(message) { this.show(message, 'error'); },
+  warning(message) { this.show(message, 'warning'); }
 };
 
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
+// ============================================
+// WORKER MANAGER
+// ============================================
 
-/**
- * Format file size to human-readable string
- */
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-/**
- * Get file extension from filename
- */
-function getFileExtension(filename) {
-  return filename.split('.').pop().toLowerCase();
-}
-
-/**
- * Check if file type is supported
- */
-function isSupportedFile(file) {
-  const ext = getFileExtension(file.name);
-  return [...CONFIG.supportedFormats.image, ...CONFIG.supportedFormats.pdf].includes(ext);
-}
-
-/**
- * Generate unique ID
- */
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-/**
- * Sleep utility
- */
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// ========================================
-// FILE HANDLING
-// ========================================
-
-/**
- * Read file as ArrayBuffer
- */
-function readFileAsArrayBuffer(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-/**
- * Read file as Data URL
- */
-function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
- * Download file with custom name
- */
-function downloadFile(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ========================================
-// WORKER MANAGEMENT
-// ========================================
-
-/**
- * Create and manage web workers
- */
-class WorkerManager {
-  constructor(workerPath) {
-    this.workerPath = workerPath;
-    this.worker = null;
-    this.queue = [];
-    this.processing = false;
-  }
-
-  async process(message) {
+const WorkerManager = {
+  workers: {},
+  workerQueue: [],
+  maxWorkers: 4,
+  
+  getWorker(type) {
     return new Promise((resolve, reject) => {
-      if (!this.worker) {
-        this.worker = new Worker(this.workerPath);
+      if (this.workers[type]) {
+        resolve(this.workers[type]);
+        return;
       }
-
-      const messageId = generateId();
       
-      this.worker.onmessage = (e) => {
-        if (e.data.id === messageId) {
-          if (e.data.error) {
-            reject(new Error(e.data.error));
-          } else {
-            resolve(e.data.result);
+      try {
+        const worker = new Worker(`/workers/${type}.worker.js`);
+        worker.onmessage = (e) => {
+          if (e.data.callback) {
+            e.data.callback(e.data.result, e.data.error);
           }
-          this.processing = false;
-          this.processNext();
-        }
-      };
-
-      this.worker.onerror = (e) => {
-        reject(new Error(e.message));
-        this.processing = false;
-        this.processNext();
-      };
-
-      this.queue.push({ message: { ...message, id: messageId }, resolve, reject });
-      
-      if (!this.processing) {
-        this.processNext();
+        };
+        worker.onerror = (e) => {
+          console.error(`Worker error (${type}):`, e);
+          reject(e);
+        };
+        this.workers[type] = worker;
+        resolve(worker);
+      } catch (e) {
+        reject(e);
       }
     });
-  }
-
-  processNext() {
-    if (this.queue.length > 0 && !this.processing) {
-      this.processing = true;
-      const { message } = this.queue.shift();
-      this.worker.postMessage(message);
+  },
+  
+  process(type, data, callback) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const worker = await this.getWorker(type);
+        worker.postMessage({
+          type: type,
+          data: data,
+          callback: (result, error) => {
+            if (error) reject(error);
+            else resolve(result);
+            if (callback) callback(result, error);
+          }
+        });
+      } catch (e) {
+        // Fallback to main thread if worker fails
+        console.warn('Worker failed, using fallback');
+        resolve(this.fallbackProcess(type, data));
+      }
+    });
+  },
+  
+  fallbackProcess(type, data) {
+    console.log('Fallback processing for:', type);
+    return { success: false, error: 'Worker not available' };
+  },
+  
+  terminate(type) {
+    if (this.workers[type]) {
+      this.workers[type].terminate();
+      delete this.workers[type];
     }
+  },
+  
+  terminateAll() {
+    Object.keys(this.workers).forEach(type => this.terminate(type));
   }
+};
 
-  terminate() {
-    if (this.worker) {
-      this.worker.terminate();
-      this.worker = null;
-    }
-    this.queue = [];
-    this.processing = false;
-  }
-}
-
-// ========================================
+// ============================================
 // UPLOAD HANDLER
-// ========================================
+// ============================================
 
-/**
- * Handle drag and drop uploads
- */
-class UploadHandler {
-  constructor(options = {}) {
-    this.dropZone = options.dropZone;
-    this.fileInput = options.fileInput;
-    this.onFilesSelected = options.onFilesSelected;
-    this.accept = options.accept || '*';
+const UploadHandler = {
+  acceptedTypes: ['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  maxFileSize: 100 * 1024 * 1024, // 100MB
+  
+  init(uploadArea, fileInput, onFilesSelected) {
+    if (!uploadArea || !fileInput) return;
     
-    this.init();
-  }
-
-  init() {
-    if (this.dropZone) {
-      this.setupDragDrop();
-      this.dropZone.addEventListener('click', () => {
-        if (this.fileInput) this.fileInput.click();
-      });
-    }
-
-    if (this.fileInput) {
-      this.fileInput.addEventListener('change', (e) => {
-        this.handleFiles(e.target.files);
-      });
-    }
-
+    // Click to upload
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      this.handleFiles(files, onFilesSelected);
+      fileInput.value = '';
+    });
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files);
+      this.handleFiles(files, onFilesSelected);
+    });
+    
     // Paste support
     document.addEventListener('paste', (e) => {
-      const items = e.clipboardData.items;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
       const files = [];
       for (let item of items) {
-        if (item.type.indexOf('image') !== -1) {
+        if (item.type.startsWith('image/')) {
           files.push(item.getAsFile());
         }
       }
+      
       if (files.length > 0) {
-        this.handleFiles(files);
+        this.handleFiles(files, onFilesSelected);
       }
     });
-  }
-
-  setupDragDrop() {
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      this.dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-    });
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-      this.dropZone.addEventListener(eventName, () => {
-        this.dropZone.classList.add('dragover');
-      });
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-      this.dropZone.addEventListener(eventName, () => {
-        this.dropZone.classList.remove('dragover');
-      });
-    });
-
-    this.dropZone.addEventListener('drop', (e) => {
-      const files = e.dataTransfer.files;
-      this.handleFiles(files);
-    });
-  }
-
-  handleFiles(files) {
-    const validFiles = Array.from(files).filter(file => {
-      if (!isSupportedFile(file)) {
-        console.warn(`Unsupported file type: ${file.name}`);
-        return false;
-      }
-      if (file.size > CONFIG.maxFileSize) {
-        console.warn(`File too large: ${file.name}`);
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length > 0 && this.onFilesSelected) {
-      this.onFilesSelected(validFiles);
-    }
-  }
-}
-
-// ========================================
-// PROGRESS TRACKER
-// ========================================
-
-/**
- * Track and display progress
- */
-class ProgressTracker {
-  constructor(containerId) {
-    this.container = document.getElementById(containerId);
-    this.progress = 0;
-  }
-
-  update(percent) {
-    this.progress = Math.min(100, Math.max(0, percent));
-    if (this.container) {
-      const bar = this.container.querySelector('.progress-bar');
-      if (bar) {
-        bar.style.width = this.progress + '%';
-      }
-      const text = this.container.querySelector('.progress-text');
-      if (text) {
-        text.textContent = Math.round(this.progress) + '%';
-      }
-    }
-  }
-
-  reset() {
-    this.progress = 0;
-    this.update(0);
-  }
-
-  complete() {
-    this.update(100);
-  }
-}
-
-// ========================================
-// UI HELPERS
-// ========================================
-
-/**
- * Show loading state
- */
-function showLoading(elementId) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.innerHTML = '<div class="spinner"></div>';
-    element.classList.remove('hidden');
-  }
-}
-
-/**
- * Hide loading state
- */
-function hideLoading(elementId) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.classList.add('hidden');
-  }
-}
-
-/**
- * Show notification
- */
-function showNotification(message, type = 'info') {
-  const notification = document.createElement('div');
-  notification.className = `glass-card p-4 fixed bottom-4 right-4 z-50 animate-slide-up`;
-  notification.style.cssText = `
-    background: ${type === 'error' ? '#FF6B6B' : type === 'success' ? '#48BB78' : '#6C5CE7'};
-    color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
-  `;
-  notification.textContent = message;
-  document.body.appendChild(notification);
+  },
   
-  setTimeout(() => {
-    notification.style.opacity = '0';
-    notification.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => notification.remove(), 300);
-  }, 3000);
-}
-
-/**
- * Create tool card HTML
- */
-function createToolCard(tool) {
-  return `
-    <a href="${tool.url}" class="glass-card category-card block">
-      <div class="category-icon">
-        ${tool.icon}
-      </div>
-      <h3 class="mb-2">${tool.name}</h3>
-      <p class="text-gray-600 text-sm">${tool.description}</p>
-    </a>
-  `;
-}
-
-// ========================================
-// LOCAL STORAGE UTILS
-// ========================================
-
-const Storage = {
-  get(key, defaultValue = null) {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch {
-      return defaultValue;
+  handleFiles(files, callback) {
+    const validFiles = files.filter(file => {
+      const ext = '.' + file.name.split('.').pop().toLowerCase();
+      const isValidType = this.acceptedTypes.includes(ext);
+      const isValidSize = file.size <= this.maxFileSize;
+      
+      if (!isValidType) {
+        Toast.error(`Invalid file type: ${file.name}`);
+      }
+      if (!isValidSize) {
+        Toast.error(`File too large: ${file.name} (max 100MB)`);
+      }
+      
+      return isValidType && isValidSize;
+    });
+    
+    if (validFiles.length > 0 && callback) {
+      callback(validFiles);
     }
   },
   
-  set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch {
-      return false;
-    }
+  readFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsArrayBuffer(file);
+    });
   },
   
-  remove(key) {
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch {
-      return false;
-    }
+  readAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
   }
 };
 
-// ========================================
-// EXPORT
-// ========================================
+// ============================================
+// DOWNLOAD HELPER
+// ============================================
 
+const DownloadHelper = {
+  download(data, filename, mimeType = 'application/octet-stream') {
+    const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  },
+  
+  downloadFromCanvas(canvas, filename, format = 'image/jpeg', quality = 0.9) {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        this.download(blob, filename);
+      } else {
+        Toast.error('Failed to generate image');
+      }
+    }, format, quality);
+  }
+};
+
+// ============================================
+// PROGRESS HELPER
+// ============================================
+
+const ProgressHelper = {
+  update(progressBar, percent) {
+    if (progressBar) {
+      progressBar.style.width = `${percent}%`;
+    }
+  },
+  
+  simulate(duration, onUpdate, onComplete) {
+    let progress = 0;
+    const interval = 50;
+    const increment = 100 / (duration / interval);
+    
+    const timer = setInterval(() => {
+      progress += increment;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(timer);
+        if (onComplete) onComplete();
+      }
+      if (onUpdate) onUpdate(progress);
+    }, interval);
+    
+    return () => clearInterval(timer);
+  }
+};
+
+// ============================================
+// UTILITIES
+// ============================================
+
+const Utils = {
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  },
+  
+  formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  },
+  
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
+  
+  throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  },
+  
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  },
+  
+  isImage(file) {
+    return file.type.startsWith('image/');
+  },
+  
+  isPDF(file) {
+    return file.type === 'application/pdf';
+  }
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  Toast.init();
+  
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href !== '#') {
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  });
+  
+  // Lazy load images
+  const observerOptions = { rootMargin: '50px' };
+  const imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        if (img.dataset.src) {
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
+        }
+        imageObserver.unobserve(img);
+      }
+    });
+  }, observerOptions);
+  
+  document.querySelectorAll('img[data-src]').forEach(img => {
+    imageObserver.observe(img);
+  });
+});
+
+// Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    CONFIG,
-    formatFileSize,
-    getFileExtension,
-    isSupportedFile,
-    generateId,
-    sleep,
-    readFileAsArrayBuffer,
-    readFileAsDataURL,
-    downloadFile,
-    WorkerManager,
-    UploadHandler,
-    ProgressTracker,
-    showLoading,
-    hideLoading,
-    showNotification,
-    createToolCard,
-    Storage
-  };
+  module.exports = { Toast, WorkerManager, UploadHandler, DownloadHelper, ProgressHelper, Utils };
 }

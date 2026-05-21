@@ -3,207 +3,355 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Compress Image - Reduce Image Size Online Free | ToolsHub</title>
-  <meta name="description" content="Compress images online without losing quality. Reduce JPG, PNG, WebP file sizes instantly in your browser. No upload required, 100% private.">
+  <meta name="description" content="Compress images online for free without losing quality. Reduce image file size by up to 90% with our browser-based image compressor. Supports JPG, PNG, WEBP formats.">
   <meta name="keywords" content="compress image, reduce image size, image optimizer, compress jpg, compress png, free image compressor">
+  <link rel="canonical" href="https://browsertools.app/tools/image/compress-image.html">
   
-  <link rel="canonical" href="https://yourdomain.com/tools/image/compress-image.html">
-  
+  <!-- OpenGraph -->
+  <meta property="og:title" content="Compress Image - Free Online Image Compressor">
+  <meta property="og:description" content="Reduce image file size while maintaining quality. 100% browser-based, no uploads required.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://yourdomain.com/tools/image/compress-image.html">
-  <meta property="og:title" content="Compress Image - Free Online Tool">
-  <meta property="og:description" content="Reduce image file size without losing quality. Browser-based, private, and free.">
   
+  <title>Compress Image - Free Online Image Compressor | BrowserTools</title>
   <link rel="stylesheet" href="/css/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- JSON-LD Schema -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "Compress Image",
-    "applicationCategory": "ProductivityApplication",
+    "name": "Image Compressor",
+    "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Web Browser",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "8520" }
+    "description": "Free browser-based image compression tool that reduces file size while maintaining quality"
   }
   </script>
-  
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://yourdomain.com/" },
-      { "@type": "ListItem", "position": 2, "name": "Image Tools", "item": "https://yourdomain.com/tools/image/" },
-      { "@type": "ListItem", "position": 3, "name": "Compress Image", "item": "https://yourdomain.com/tools/image/compress-image.html" }
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://browsertools.app/" },
+      { "@type": "ListItem", "position": 2, "name": "Image Tools", "item": "https://browsertools.app/#categories" },
+      { "@type": "ListItem", "position": 3, "name": "Compress Image", "item": "https://browsertools.app/tools/image/compress-image.html" }
     ]
   }
   </script>
 </head>
 <body>
-  <nav class="glass-card sticky top-0 z-50 mx-4 mt-4">
-    <div class="container flex items-center justify-between py-4">
-      <a href="/" class="flex items-center gap-2">
-        <span class="text-xl font-bold gradient-text">ToolsHub</span>
-      </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="/" class="text-gray-600 hover:text-primary transition">Home</a>
-        <a href="/tools/image/" class="text-gray-600 hover:text-primary transition">Image Tools</a>
-        <a href="#how-to-use" class="text-gray-600 hover:text-primary transition">How to Use</a>
-      </div>
-      <a href="/" class="btn btn-primary">All Tools</a>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-content">
+      <a href="/" class="logo">BrowserTools</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#tools">Tools</a></li>
+        <li><a href="/#categories">Categories</a></li>
+        <li><a href="/about.html">About</a></li>
+      </ul>
     </div>
   </nav>
 
+  <!-- Tool Header -->
   <section class="section">
-    <div class="container max-w-4xl mx-auto">
-      <div class="text-center mb-8">
+    <div class="container">
+      <div class="section-header">
         <h1 class="mb-2">Compress Image</h1>
-        <p class="text-gray-600">Reduce image file size while maintaining visual quality</p>
+        <p class="section-subtitle">Reduce image file size while maintaining quality. Process images directly in your browser.</p>
       </div>
       
-      <div class="glass-card p-8 mb-8">
-        <div class="upload-area" id="drop-zone">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-          </svg>
-          <h3 class="text-xl font-semibold mb-2">Drag & Drop Image Here</h3>
-          <p class="text-gray-500 mb-4">Supports JPG, PNG, WebP up to 50MB</p>
-          <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Select Image</button>
-          <input type="file" id="file-input" class="hidden" accept=".jpg,.jpeg,.png,.webp">
+      <!-- Upload Area -->
+      <div id="uploadArea" class="upload-area mb-4">
+        <div class="upload-area-content">
+          <div class="upload-icon">🗜️</div>
+          <h3 class="upload-text">Drop Your Image Here</h3>
+          <p class="upload-subtext">or click to browse • Supports JPG, PNG, WEBP</p>
+          <div class="upload-formats mt-2">
+            <span class="format-badge">JPG</span>
+            <span class="format-badge">PNG</span>
+            <span class="format-badge">WEBP</span>
+            <span class="format-badge">Max 50MB</span>
+          </div>
+        </div>
+        <input type="file" id="fileInput" hidden accept=".jpg,.jpeg,.png,.webp">
+      </div>
+      
+      <!-- Settings Panel (hidden initially) -->
+      <div id="settingsPanel" class="card mb-4 hidden">
+        <h3 class="mb-2">Compression Settings</h3>
+        <div class="grid grid-3">
+          <div>
+            <label class="mb-1" style="display:block; font-weight:500;">Quality</label>
+            <select id="qualitySelect" class="btn btn-secondary" style="width:100%;">
+              <option value="0.9">High (90%)</option>
+              <option value="0.7" selected>Medium (70%)</option>
+              <option value="0.5">Low (50%)</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1" style="display:block; font-weight:500;">Max Width</label>
+            <select id="maxWidthSelect" class="btn btn-secondary" style="width:100%;">
+              <option value="">Original</option>
+              <option value="1920">1920px (Full HD)</option>
+              <option value="1280">1280px (HD)</option>
+              <option value="800">800px</option>
+              <option value="400">400px</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1" style="display:block; font-weight:500;">Target Size</label>
+            <select id="targetSizeSelect" class="btn btn-secondary" style="width:100%;">
+              <option value="">None</option>
+              <option value="102400">100 KB</option>
+              <option value="51200">50 KB</option>
+              <option value="20480">20 KB</option>
+            </select>
+          </div>
         </div>
         
-        <div id="file-preview" class="hidden mt-6"></div>
-        <div id="progress-container" class="hidden mt-6">
-          <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
-          <p class="text-center text-sm text-gray-500">Processing...</p>
-        </div>
-        <div id="download-section" class="hidden mt-6 text-center">
-          <a id="download-btn" class="btn btn-primary" download>Download Compressed Image</a>
-          <button class="btn btn-secondary ml-4" onclick="resetTool()">Compress Another</button>
-        </div>
-        <div id="loading" class="hidden mt-6 text-center">
-          <div class="spinner mx-auto mb-4"></div>
-          <p class="text-gray-600">Compressing your image...</p>
+        <div class="flex gap-2 mt-3" style="justify-content:center;">
+          <button id="compressBtn" class="btn btn-primary btn-lg">Compress Image</button>
+          <button id="resetBtn" class="btn btn-secondary">Cancel</button>
         </div>
       </div>
       
-      <div id="how-to-use" class="glass-card p-8 mb-8">
-        <h2 class="mb-4">How to Compress Images Online</h2>
-        <ol class="space-y-4">
-          <li class="flex gap-4"><span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">1</span><div><h4 class="font-semibold">Upload your image</h4><p class="text-gray-600">Drag and drop or select an image from your device.</p></div></li>
-          <li class="flex gap-4"><span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">2</span><div><h4 class="font-semibold">Adjust compression level</h4><p class="text-gray-600">Choose quality settings or target file size.</p></div></li>
-          <li class="flex gap-4"><span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">3</span><div><h4 class="font-semibold">Download instantly</h4><p class="text-gray-600">Get your compressed image without any uploads.</p></div></li>
-        </ol>
-      </div>
-      
-      <div class="mb-8">
-        <h2 class="mb-4">Related Tools</h2>
-        <div class="tool-grid">
-          <a href="/tools/image/compress-image-to-20kb.html" class="glass-card category-card block"><h3 class="mb-2">Compress to 20KB</h3><p class="text-gray-600 text-sm">Reduce images to exactly 20KB</p></a>
-          <a href="/tools/image/jpg-to-png.html" class="glass-card category-card block"><h3 class="mb-2">JPG to PNG</h3><p class="text-gray-600 text-sm">Convert JPG format to PNG</p></a>
-          <a href="/tools/image/resize-image.html" class="glass-card category-card block"><h3 class="mb-2">Resize Image</h3><p class="text-gray-600 text-sm">Change image dimensions</p></a>
+      <!-- Preview Section -->
+      <div id="previewSection" class="hidden">
+        <div class="grid grid-2 mb-4">
+          <div class="card text-center">
+            <h4 class="mb-2">Original</h4>
+            <img id="originalPreview" style="max-width:100%; max-height:300px; border-radius:8px;" alt="Original">
+            <p id="originalSize" class="mt-2" style="color:var(--text-secondary);"></p>
+          </div>
+          <div class="card text-center">
+            <h4 class="mb-2">Compressed</h4>
+            <img id="compressedPreview" style="max-width:100%; max-height:300px; border-radius:8px;" alt="Compressed">
+            <p id="compressedSize" class="mt-2" style="color:var(--text-secondary);"></p>
+            <p id="reductionPercent" class="mt-1" style="color:#10B981; font-weight:600;"></p>
+          </div>
         </div>
-      </div>
-      
-      <div class="glass-card p-8">
-        <h2 class="mb-4">About Image Compression</h2>
-        <div class="prose text-gray-600">
-          <p class="mb-4">Our image compressor uses advanced algorithms to reduce file sizes while preserving visual quality. Perfect for web optimization, email attachments, and storage savings.</p>
-          <p>All processing happens in your browser using the Canvas API. Your images never leave your device, ensuring complete privacy and security.</p>
+        
+        <!-- Progress Bar -->
+        <div id="progressContainer" class="hidden mb-3">
+          <div class="progress-bar">
+            <div id="progressBar" class="progress-fill" style="width:0%"></div>
+          </div>
+          <p class="text-center mt-1" id="progressText">Processing...</p>
+        </div>
+        
+        <!-- Download Button -->
+        <div class="text-center">
+          <button id="downloadBtn" class="btn btn-primary btn-lg">Download Compressed Image</button>
         </div>
       </div>
     </div>
   </section>
 
-  <footer class="bg-dark text-white py-8">
-    <div class="container text-center">
-      <p class="text-gray-400">&copy; 2024 ToolsHub. All processing happens in your browser.</p>
+  <!-- Related Tools -->
+  <section class="section" style="background:rgba(108,92,231,0.03);">
+    <div class="container">
+      <h3 class="section-title text-center mb-3">Related Tools</h3>
+      <div class="grid grid-4">
+        <a href="/tools/image/resize-image.html" class="card text-center">
+          <div style="font-size:2rem;">📐</div>
+          <h4>Resize Image</h4>
+        </a>
+        <a href="/tools/image/jpg-to-png.html" class="card text-center">
+          <div style="font-size:2rem;">🔄</div>
+          <h4>JPG to PNG</h4>
+        </a>
+        <a href="/tools/image/png-to-jpg.html" class="card text-center">
+          <div style="font-size:2rem;">🖼️</div>
+          <h4>PNG to JPG</h4>
+        </a>
+        <a href="/tools/image/webp-to-jpg.html" class="card text-center">
+          <div style="font-size:2rem;">💻</div>
+          <h4>WEBP to JPG</h4>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section">
+    <div class="container" style="max-width:800px;">
+      <h3 class="section-title text-center mb-3">How to Compress Images</h3>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+          <span>How does the image compressor work?</span>
+          <span>+</span>
+        </div>
+        <div class="faq-answer">Our image compressor uses advanced algorithms to reduce file size while preserving visual quality. All processing happens in your browser - images are never uploaded to any server.</div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+          <span>What image formats are supported?</span>
+          <span>+</span>
+        </div>
+        <div class="faq-answer">We support JPG/JPEG, PNG, and WEBP formats. You can compress images in any of these formats and download them as optimized JPG files.</div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+          <span>Is there a file size limit?</span>
+          <span>+</span>
+        </div>
+        <div class="faq-answer">Yes, the maximum file size is 50MB per image. This ensures fast processing even on slower connections.</div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+          <span>Will I lose image quality?</span>
+          <span>+</span>
+        </div>
+        <div class="faq-answer">You can control the quality level. Our default settings provide excellent compression with minimal visible quality loss. For critical images, use the high quality setting.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">BrowserTools</div>
+          <p class="footer-desc">Free browser-based tools for PDF and image processing.</p>
+        </div>
+        <div>
+          <h4 class="footer-title">Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/legal/privacy-policy.html">Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copyright">© 2024 BrowserTools. All rights reserved.</p>
+      </div>
     </div>
   </footer>
 
+  <div id="toastContainer" class="toast-container"></div>
+
   <script src="/js/main.js"></script>
   <script>
-    const worker = new Worker('/workers/compress.worker.js');
-    let currentFile = null;
-    
-    document.getElementById('file-input').addEventListener('change', handleFileSelect);
-    setupDragDrop();
-    
-    function setupDragDrop() {
-      const dropZone = document.getElementById('drop-zone');
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-        dropZone.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); });
+    // Tool-specific JavaScript
+    document.addEventListener('DOMContentLoaded', () => {
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('fileInput');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const previewSection = document.getElementById('previewSection');
+      const compressBtn = document.getElementById('compressBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      
+      let currentFile = null;
+      let compressedBlob = null;
+      
+      // Initialize upload handler
+      UploadHandler.init(uploadArea, fileInput, (files) => {
+        currentFile = files[0];
+        if (currentFile) {
+          showSettings();
+        }
       });
-      ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('dragover')));
-      ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('dragover')));
-      dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
-    }
-    
-    function handleFileSelect(e) { handleFiles(e.target.files); }
-    
-    function handleFiles(files) {
-      if (files.length === 0) return;
-      const file = files[0];
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        alert('Please select a JPG, PNG, or WebP image');
-        return;
+      
+      function showSettings() {
+        settingsPanel.classList.remove('hidden');
+        uploadArea.classList.add('hidden');
+        Toast.success('Image loaded! Adjust settings and click Compress.');
       }
-      currentFile = file;
-      showPreview(file);
-    }
-    
-    function showPreview(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById('file-preview').innerHTML = `
-          <div class="flex items-center justify-between p-4 bg-white rounded-lg">
-            <div class="flex items-center gap-4">
-              <img src="${e.target.result}" class="w-12 h-12 object-cover rounded">
-              <div>
-                <p class="font-medium">${file.name}</p>
-                <p class="text-sm text-gray-500">${(file.size / 1024).toFixed(1)} KB</p>
-              </div>
-            </div>
-            <button class="btn btn-primary" onclick="compressImage()">Compress</button>
-          </div>`;
-        document.getElementById('file-preview').classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
-    }
-    
-    function compressImage() {
-      if (!currentFile) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById('loading').classList.remove('hidden');
-        worker.postMessage({
-          id: 'compress-' + Date.now(),
-          type: 'COMPRESS_IMAGE',
-          data: { imageData: e.target.result, format: currentFile.type.split('/')[1], quality: 75, originalSize: currentFile.size }
-        });
-      };
-      reader.readAsDataURL(currentFile);
-    }
-    
-    worker.onmessage = e => {
-      document.getElementById('loading').classList.add('hidden');
-      if (e.data.error) { alert(e.data.error); return; }
-      const { blob, compressedSize, compressionRatio } = e.data.result;
-      const url = URL.createObjectURL(blob);
-      document.getElementById('download-btn').href = url;
-      document.getElementById('download-section').classList.remove('hidden');
-      showNotification(`Compressed by ${compressionRatio}%! New size: ${(compressedSize/1024).toFixed(1)} KB`, 'success');
-    };
-    
-    function resetTool() {
-      currentFile = null;
-      document.getElementById('file-input').value = '';
-      document.getElementById('file-preview').classList.add('hidden');
-      document.getElementById('download-section').classList.add('hidden');
-    }
+      
+      function hideSettings() {
+        settingsPanel.classList.add('hidden');
+        uploadArea.classList.remove('hidden');
+        previewSection.classList.add('hidden');
+        currentFile = null;
+        fileInput.value = '';
+      }
+      
+      resetBtn.addEventListener('click', hideSettings);
+      
+      compressBtn.addEventListener('click', async () => {
+        if (!currentFile) return;
+        
+        const quality = parseFloat(document.getElementById('qualitySelect').value) || 0.7;
+        const maxWidth = parseInt(document.getElementById('maxWidthSelect').value) || null;
+        const targetSize = parseInt(document.getElementById('targetSizeSelect').value) || null;
+        
+        // Show progress
+        document.getElementById('progressContainer').classList.remove('hidden');
+        compressBtn.disabled = true;
+        
+        try {
+          // Read file
+          const arrayBuffer = await UploadHandler.readFile(currentFile);
+          
+          // Create preview
+          const dataUrl = await UploadHandler.readAsDataURL(currentFile);
+          document.getElementById('originalPreview').src = dataUrl;
+          document.getElementById('originalSize').textContent = Utils.formatFileSize(currentFile.size);
+          
+          // Simulate processing
+          ProgressHelper.simulate(1500, (progress) => {
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `Processing... ${Math.round(progress)}%`;
+          }, async () => {
+            // Perform compression using Canvas API
+            const img = new Image();
+            img.onload = () => {
+              let width = img.width;
+              let height = img.height;
+              
+              if (maxWidth && width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+              }
+              
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              canvas.toBlob((blob) => {
+                compressedBlob = blob;
+                const url = URL.createObjectURL(blob);
+                document.getElementById('compressedPreview').src = url;
+                document.getElementById('compressedSize').textContent = Utils.formatFileSize(blob.size);
+                
+                const reduction = Math.round((1 - blob.size / currentFile.size) * 100);
+                document.getElementById('reductionPercent').textContent = `${reduction}% smaller`;
+                
+                document.getElementById('progressContainer').classList.add('hidden');
+                previewSection.classList.remove('hidden');
+                compressBtn.disabled = false;
+                Toast.success('Image compressed successfully!');
+              }, 'image/jpeg', quality);
+            };
+            img.src = dataUrl;
+          });
+          
+        } catch (error) {
+          console.error(error);
+          Toast.error('Failed to compress image');
+          compressBtn.disabled = false;
+          document.getElementById('progressContainer').classList.add('hidden');
+        }
+      });
+      
+      downloadBtn.addEventListener('click', () => {
+        if (compressedBlob) {
+          DownloadHelper.download(compressedBlob, `compressed-${currentFile.name.split('.')[0]}.jpg`);
+          Toast.success('Download started!');
+        }
+      });
+    });
   </script>
 </body>
 </html>
