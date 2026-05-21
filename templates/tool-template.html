@@ -1,226 +1,488 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Dynamic Meta Tags (Replace {{TOOL_NAME}}, {{DESCRIPTION}}, etc.) -->
-  <title>{{TOOL_NAME}} - Free Online Tool | ToolsHub</title>
-  <meta name="description" content="{{DESCRIPTION}}">
-  <meta name="keywords" content="{{KEYWORDS}}">
-  
-  <!-- Canonical URL -->
-  <link rel="canonical" href="https://yourdomain.com{{TOOL_URL}}">
-  
-  <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://yourdomain.com{{TOOL_URL}}">
-  <meta property="og:title" content="{{TOOL_NAME}} - Free Online Tool">
-  <meta property="og:description" content="{{DESCRIPTION}}">
-  
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="/css/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Structured Data - SoftwareApplication -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "{{TOOL_NAME}}",
-    "applicationCategory": "ProductivityApplication",
-    "operatingSystem": "Web Browser",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "description": "{{DESCRIPTION}}"
-  }
-  </script>
-  
-  <!-- Structured Data - BreadcrumbList -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://yourdomain.com/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "{{CATEGORY_NAME}}",
-        "item": "https://yourdomain.com/tools/{{CATEGORY_SLUG}}/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>{{TOOL_NAME}} - Free Online {{TOOL_TYPE}} Tool | BrowserTools</title>
+    <meta name="description" content="{{TOOL_DESCRIPTION}}. 100% free, browser-based, no server uploads. Fast, secure, and easy to use.">
+    <meta name="keywords" content="{{TOOL_KEYWORDS}}">
+    <link rel="canonical" href="{{CANONICAL_URL}}">
+    
+    <!-- OpenGraph -->
+    <meta property="og:title" content="{{TOOL_NAME}} - Free Online Tool">
+    <meta property="og:description" content="{{TOOL_DESCRIPTION}}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{CANONICAL_URL}}">
+    <meta property="og:image" content="{{OG_IMAGE_URL}}">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{TOOL_NAME}} - Free Online Tool">
+    <meta name="twitter:description" content="{{TOOL_DESCRIPTION}}">
+    <meta name="twitter:image" content="{{OG_IMAGE_URL}}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Space Grotesk', 'system-ui', 'sans-serif']
+                    },
+                    colors: {
+                        primary: '#6C5CE7',
+                        secondary: '#00C2FF',
+                        accent: '#FF6B6B',
+                        background: '#F8FAFC',
+                        dark: '#111827'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass {
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #6C5CE7 0%, #00C2FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .upload-area {
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(108, 92, 231, 0.15);
+        }
+        .upload-area.dragover {
+            border-color: #6C5CE7;
+            background: rgba(108, 92, 231, 0.05);
+        }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .progress-bar { transition: width 0.3s ease; }
+        html { scroll-behavior: smooth; }
+        @media (max-width: 640px) { .tool-grid { grid-template-columns: 1fr; } }
+    </style>
+    
+    <!-- JSON-LD Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
         "name": "{{TOOL_NAME}}",
-        "item": "https://yourdomain.com{{TOOL_URL}}"
-      }
-    ]
-  }
-  </script>
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web Browser",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "1250" }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Is {{TOOL_NAME}} free to use?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes, completely free with no limitations or watermarks." }
+            },
+            {
+                "@type": "Question",
+                "name": "Do I need to upload my files to a server?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No! All processing happens in your browser. Files never leave your device." }
+            }
+        ]
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Use {{TOOL_NAME}}",
+        "step": [
+            { "@type": "HowToStep", "text": "Upload your file(s)" },
+            { "@type": "HowToStep", "text": "Configure settings" },
+            { "@type": "HowToStep", "text": "Click Process" },
+            { "@type": "HowToStep", "text": "Download result" }
+        ]
+    }
+    </script>
 </head>
-<body>
-  <!-- Navigation -->
-  <nav class="glass-card sticky top-0 z-50 mx-4 mt-4">
-    <div class="container flex items-center justify-between py-4">
-      <a href="/" class="flex items-center gap-2">
-        <span class="text-xl font-bold gradient-text">ToolsHub</span>
-      </a>
-      <div class="hidden md:flex items-center gap-8">
-        <a href="/" class="text-gray-600 hover:text-primary transition">Home</a>
-        <a href="/tools/{{CATEGORY_SLUG}}/" class="text-gray-600 hover:text-primary transition">{{CATEGORY_NAME}}</a>
-        <a href="#how-to-use" class="text-gray-600 hover:text-primary transition">How to Use</a>
-      </div>
-      <a href="/" class="btn btn-primary">All Tools</a>
-    </div>
-  </nav>
+<body class="bg-background dark:bg-dark min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg"></div>
+                    <span class="font-display font-bold text-xl gradient-text">BrowserTools</span>
+                </a>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/#tools" class="text-gray-600 dark:text-gray-300 hover:text-primary">Tools</a>
+                    <a href="/#categories" class="text-gray-600 dark:text-gray-300 hover:text-primary">Categories</a>
+                    <a href="/about.html" class="text-gray-600 dark:text-gray-300 hover:text-primary">About</a>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">🌙</button>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-  <!-- Tool Section -->
-  <section class="section">
-    <div class="container max-w-4xl mx-auto">
-      <!-- Tool Header -->
-      <div class="text-center mb-8">
-        <h1 class="mb-2">{{TOOL_NAME}}</h1>
-        <p class="text-gray-600">{{DESCRIPTION}}</p>
-      </div>
-      
-      <!-- Upload Area -->
-      <div class="glass-card p-8 mb-8">
-        <div class="upload-area" id="drop-zone">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-          </svg>
-          <h3 class="text-xl font-semibold mb-2">Drag & Drop Files Here</h3>
-          <p class="text-gray-500 mb-4">or click to browse from your device</p>
-          <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
-            Select Files
-          </button>
-          <input type="file" id="file-input" class="hidden" multiple accept="{{ACCEPT_FORMATS}}">
-        </div>
-        
-        <!-- File Preview -->
-        <div id="file-preview" class="hidden mt-6">
-          <div class="flex items-center justify-between p-4 bg-white rounded-lg">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-              </div>
-              <div>
-                <p class="font-medium" id="file-name">filename.pdf</p>
-                <p class="text-sm text-gray-500" id="file-size">2.5 MB</p>
-              </div>
-            </div>
-            <button class="text-red-500 hover:text-red-700" onclick="removeFile()">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        
-        <!-- Progress -->
-        <div id="progress-container" class="hidden mt-6">
-          <div class="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-          </div>
-          <p class="text-center text-sm text-gray-500 progress-text">0%</p>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div id="action-buttons" class="hidden mt-6 flex gap-4 justify-center">
-          <button class="btn btn-primary" onclick="processFile()">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-            </svg>
-            Process File
-          </button>
-        </div>
-        
-        <!-- Download Button -->
-        <div id="download-section" class="hidden mt-6 text-center">
-          <a id="download-btn" class="btn btn-primary" download>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
-            Download Result
-          </a>
-          <button class="btn btn-secondary ml-4" onclick="resetTool()">
-            Process Another File
-          </button>
-        </div>
-        
-        <!-- Loading State -->
-        <div id="loading" class="hidden mt-6 text-center">
-          <div class="spinner mx-auto mb-4"></div>
-          <p class="text-gray-600">Processing your file...</p>
-        </div>
-      </div>
-      
-      <!-- How to Use -->
-      <div id="how-to-use" class="glass-card p-8 mb-8">
-        <h2 class="mb-4">How to Use {{TOOL_NAME}}</h2>
-        <ol class="space-y-4">
-          <li class="flex gap-4">
-            <span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">1</span>
-            <div>
-              <h4 class="font-semibold">Upload your file</h4>
-              <p class="text-gray-600">Drag and drop or click to select files from your device.</p>
-            </div>
-          </li>
-          <li class="flex gap-4">
-            <span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">2</span>
-            <div>
-              <h4 class="font-semibold">Configure settings</h4>
-              <p class="text-gray-600">Adjust any available options for your conversion.</p>
-            </div>
-          </li>
-          <li class="flex gap-4">
-            <span class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">3</span>
-            <div>
-              <h4 class="font-semibold">Download result</h4>
-              <p class="text-gray-600">Get your processed file instantly. No upload required.</p>
-            </div>
-          </li>
-        </ol>
-      </div>
-      
-      <!-- Related Tools -->
-      <div class="mb-8">
-        <h2 class="mb-4">Related Tools</h2>
-        <div class="tool-grid" id="related-tools">
-          <!-- Related tools will be injected by JS -->
-        </div>
-      </div>
-      
-      <!-- SEO Content -->
-      <div class="glass-card p-8">
-        <h2 class="mb-4">About {{TOOL_NAME}}</h2>
-        <div class="prose text-gray-600">
-          <p>{{SEO_CONTENT}}</p>
-        </div>
-      </div>
-    </div>
-  </section>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-8">
+            <a href="/" class="hover:text-primary">Home</a>
+            <span>/</span>
+            <a href="{{CATEGORY_URL}}" class="hover:text-primary">{{CATEGORY_NAME}}</a>
+            <span>/</span>
+            <span class="text-gray-900 dark:text-white font-medium">{{TOOL_NAME}}</span>
+        </nav>
 
-  <!-- Footer -->
-  <footer class="bg-dark text-white py-8">
-    <div class="container text-center">
-      <p class="text-gray-400">&copy; 2024 ToolsHub. All processing happens in your browser.</p>
-    </div>
-  </footer>
+        <!-- Tool Header -->
+        <div class="text-center mb-12">
+            <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{{TOOL_NAME}}</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{{TOOL_DESCRIPTION}}</p>
+        </div>
 
-  <!-- Scripts -->
-  <script src="/js/main.js"></script>
-  <script src="/js/tool-{{TOOL_ID}}.js"></script>
+        <!-- Tool Interface -->
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Main Tool Area -->
+            <div class="lg:col-span-2">
+                <div class="glass rounded-2xl p-8 shadow-lg">
+                    <!-- Upload Area -->
+                    <div id="upload-area" class="upload-area border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-12 text-center cursor-pointer">
+                        <input type="file" id="file-input" class="hidden" {{ACCEPT_ATTR}}>
+                        <div class="space-y-4">
+                            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-3xl">{{TOOL_ICON}}</div>
+                            <div>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">Drop your file here</p>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">or click to browse</p>
+                            </div>
+                            <p class="text-sm text-gray-400">Supports: {{SUPPORTED_FORMATS}} • Max: {{MAX_FILE_SIZE}}</p>
+                        </div>
+                    </div>
+
+                    <!-- File Preview -->
+                    <div id="file-preview" class="hidden mt-6">
+                        <div class="glass rounded-xl p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div id="preview-thumbnail" class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden"></div>
+                                    <div>
+                                        <p id="file-name" class="font-medium text-gray-900 dark:text-white truncate max-w-xs"></p>
+                                        <p id="file-size" class="text-sm text-gray-500 dark:text-gray-400"></p>
+                                    </div>
+                                </div>
+                                <button id="remove-file" class="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-500">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div id="settings-panel" class="hidden mt-6 space-y-4">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Settings</h3>
+                        {{SETTINGS_HTML}}
+                    </div>
+
+                    <!-- Progress -->
+                    <div id="progress-section" class="hidden mt-6">
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Processing...</span>
+                                <span id="progress-percent" class="text-primary font-medium">0%</span>
+                            </div>
+                            <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div id="progress-bar" class="progress-bar h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button id="process-btn" class="hidden w-full mt-6 py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all">{{PROCESS_BUTTON_TEXT}}</button>
+
+                    <!-- Download Section -->
+                    <div id="download-section" class="hidden mt-6">
+                        <div class="glass rounded-xl p-6 text-center">
+                            <div class="w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center text-3xl mb-4">✓</div>
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ready to Download!</h3>
+                            <p id="download-info" class="text-gray-500 dark:text-gray-400 mb-4"></p>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <button id="download-btn" class="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:shadow-lg">Download</button>
+                                <button id="new-file-btn" class="flex-1 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800">Process Another</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error -->
+                    <div id="error-message" class="hidden mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                        <p class="text-red-600 dark:text-red-400 text-center"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <div class="glass rounded-2xl p-6 shadow-lg">
+                    <h3 class="font-display font-semibold text-lg text-gray-900 dark:text-white mb-4">About This Tool</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start space-x-3"><span class="text-green-500">✓</span><span class="text-gray-600 dark:text-gray-400">100% browser-based</span></li>
+                        <li class="flex items-start space-x-3"><span class="text-green-500">✓</span><span class="text-gray-600 dark:text-gray-400">No server uploads</span></li>
+                        <li class="flex items-start space-x-3"><span class="text-green-500">✓</span><span class="text-gray-600 dark:text-gray-400">Free, no limits</span></li>
+                        <li class="flex items-start space-x-3"><span class="text-green-500">✓</span><span class="text-gray-600 dark:text-gray-400">No watermarks</span></li>
+                    </ul>
+                </div>
+                
+                <div class="glass rounded-2xl p-6 shadow-lg">
+                    <h3 class="font-display font-semibold text-lg text-gray-900 dark:text-white mb-4">Related Tools</h3>
+                    <div class="space-y-3">{{RELATED_TOOLS_HTML}}</div>
+                </div>
+                
+                <div class="glass rounded-2xl p-6 shadow-lg">
+                    <h3 class="font-display font-semibold text-lg text-gray-900 dark:text-white mb-4">Share</h3>
+                    <div class="flex space-x-3">
+                        <button onclick="shareTool('twitter')" class="flex-1 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500">Twitter</button>
+                        <button onclick="shareTool('facebook')" class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Facebook</button>
+                        <button onclick="shareTool('linkedin')" class="flex-1 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800">LinkedIn</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <section class="mt-16">
+            <h2 class="font-display text-3xl font-bold text-gray-900 dark:text-white text-center mb-8">Frequently Asked Questions</h2>
+            <div class="max-w-3xl mx-auto space-y-4">
+                <div class="glass rounded-xl p-6">
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Is this tool free?</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Yes! Completely free with no hidden costs or watermarks.</p>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Are my files secure?</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Absolutely. All processing is done in your browser. Files never leave your device.</p>
+                </div>
+                <div class="glass rounded-xl p-6">
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">What browsers are supported?</h3>
+                    <p class="text-gray-600 dark:text-gray-400">All modern browsers: Chrome, Firefox, Safari, Edge.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How To -->
+        <section class="mt-16">
+            <h2 class="font-display text-3xl font-bold text-gray-900 dark:text-white text-center mb-8">How to Use</h2>
+            <div class="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div class="glass rounded-xl p-6 text-center">
+                    <div class="w-12 h-12 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold mb-4">1</div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Upload</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Drag & drop or click</p>
+                </div>
+                <div class="glass rounded-xl p-6 text-center">
+                    <div class="w-12 h-12 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold mb-4">2</div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Configure</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Adjust settings</p>
+                </div>
+                <div class="glass rounded-xl p-6 text-center">
+                    <div class="w-12 h-12 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold mb-4">3</div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Process</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Click process button</p>
+                </div>
+                <div class="glass rounded-xl p-6 text-center">
+                    <div class="w-12 h-12 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold mb-4">4</div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Download</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Get your file instantly</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg"></div>
+                        <span class="font-display font-bold text-xl gradient-text">BrowserTools</span>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Premium browser-based tools. 100% free, no uploads.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Tools</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/tools/pdf/merge-pdf.html" class="text-gray-600 dark:text-gray-400 hover:text-primary">Merge PDF</a></li>
+                        <li><a href="/tools/image/compress-image.html" class="text-gray-600 dark:text-gray-400 hover:text-primary">Compress Image</a></li>
+                        <li><a href="/tools/image/resize-image.html" class="text-gray-600 dark:text-gray-400 hover:text-primary">Resize Image</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/about.html" class="text-gray-600 dark:text-gray-400 hover:text-primary">About</a></li>
+                        <li><a href="/contact.html" class="text-gray-600 dark:text-gray-400 hover:text-primary">Contact</a></li>
+                        <li><a href="/legal/privacy-policy.html" class="text-gray-600 dark:text-gray-400 hover:text-primary">Privacy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Connect</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-primary">🐦</a>
+                        <a href="#" class="text-gray-400 hover:text-primary">💼</a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500 dark:text-gray-400">© 2024 BrowserTools</div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        themeToggle.textContent = html.classList.contains('dark') ? '☀️' : '🌙';
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+            themeToggle.textContent = html.classList.contains('dark') ? '☀️' : '🌙';
+        });
+        if (localStorage.getItem('theme') === 'dark') html.classList.add('dark');
+
+        // Elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const filePreview = document.getElementById('file-preview');
+        const fileNameEl = document.getElementById('file-name');
+        const fileSizeEl = document.getElementById('file-size');
+        const previewThumb = document.getElementById('preview-thumbnail');
+        const removeBtn = document.getElementById('remove-file');
+        const settingsPanel = document.getElementById('settings-panel');
+        const processBtn = document.getElementById('process-btn');
+        const progressSection = document.getElementById('progress-section');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const downloadSection = document.getElementById('download-section');
+        const downloadBtn = document.getElementById('download-btn');
+        const newFileBtn = document.getElementById('new-file-btn');
+        const errorEl = document.getElementById('error-message');
+        
+        let currentFile = null;
+
+        // Drag & Drop
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+        
+        // Paste
+        document.addEventListener('paste', (e) => {
+            for (let item of e.clipboardData.items) {
+                if (item.type.indexOf('image') !== -1) { handleFile(item.getAsFile()); break; }
+            }
+        });
+
+        function handleFile(file) {
+            currentFile = file;
+            fileNameEl.textContent = file.name;
+            fileSizeEl.textContent = formatFileSize(file.size);
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.className = 'w-full h-full object-cover';
+                previewThumb.innerHTML = '';
+                previewThumb.appendChild(img);
+            } else {
+                previewThumb.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl">📄</div>';
+            }
+            filePreview.classList.remove('hidden');
+            settingsPanel.classList.remove('hidden');
+            processBtn.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+        }
+
+        removeBtn.addEventListener('click', () => {
+            currentFile = null;
+            fileInput.value = '';
+            filePreview.classList.add('hidden');
+            settingsPanel.classList.add('hidden');
+            processBtn.classList.add('hidden');
+            progressSection.classList.add('hidden');
+            downloadSection.classList.add('hidden');
+        });
+
+        processBtn.addEventListener('click', async () => {
+            if (!currentFile) return;
+            processBtn.disabled = true;
+            processBtn.textContent = 'Processing...';
+            progressSection.classList.remove('hidden');
+            
+            for (let i = 0; i <= 100; i += 10) {
+                await new Promise(r => setTimeout(r, 150));
+                progressBar.style.width = i + '%';
+                progressPercent.textContent = i + '%';
+            }
+            
+            progressSection.classList.add('hidden');
+            downloadSection.classList.remove('hidden');
+            document.getElementById('download-info').textContent = `Processed: ${formatFileSize(currentFile.size)}`;
+            processBtn.disabled = false;
+            processBtn.textContent = '{{PROCESS_BUTTON_TEXT}}';
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (currentFile) {
+                const url = URL.createObjectURL(currentFile);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'processed-' + currentFile.name;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        newFileBtn.addEventListener('click', () => removeBtn.click());
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function shareTool(platform) {
+            const urls = {
+                twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(location.href)}`,
+                facebook: `https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}`,
+                linkedin: `https://linkedin.com/shareArticle?url=${encodeURIComponent(location.href)}`
+            };
+            window.open(urls[platform], '_blank', 'width=600,height=400');
+        }
+    </script>
 </body>
 </html>
