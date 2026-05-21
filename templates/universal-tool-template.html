@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags - Dynamic -->
+  <title data-tool-name>Tool Name - BrowserTools</title>
+  <meta name="description" content="Free browser-based tool. Process files instantly without uploading to servers." />
+  <link rel="canonical" href="" />
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Tool Name - BrowserTools" />
+  <meta property="og:description" content="Free browser-based tool. Process files instantly." />
+  <meta property="og:image" content="/assets/og-image.jpg" />
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tool Name - BrowserTools" />
+  <meta name="twitter:description" content="Free browser-based tool." />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Space Grotesk', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            primary: '#6C5CE7',
+            secondary: '#00C2FF',
+            accent: '#FF6B6B'
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom Styles -->
+  <style>
+    /* Glassmorphism */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .dark .glass-card {
+      background: rgba(31, 41, 55, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Gradient Text */
+    .gradient-text {
+      background: linear-gradient(135deg, #6C5CE7 0%, #00C2FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    /* Upload Area Animation */
+    .upload-area {
+      transition: all 0.3s ease;
+    }
+    
+    .upload-area.drag-over {
+      transform: scale(1.02);
+      border-color: #6C5CE7;
+      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      transition: width 0.3s ease;
+    }
+    
+    /* Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    
+    .pulse-ring::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 2px solid #6C5CE7;
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+  
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-40 glass-card border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="/" class="font-display font-bold text-xl gradient-text">BrowserTools</a>
+        <div class="hidden md:flex items-center gap-6">
+          <a href="/tools/pdf/" class="text-gray-600 dark:text-gray-300 hover:text-primary">PDF Tools</a>
+          <a href="/tools/image/" class="text-gray-600 dark:text-gray-300 hover:text-primary">Image Tools</a>
+          <a href="/guides/" class="text-gray-600 dark:text-gray-300 hover:text-primary">Guides</a>
+          <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            🌙
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Breadcrumb -->
+    <div id="breadcrumb"></div>
+    
+    <!-- Category Navigation -->
+    <div id="categoryNav"></div>
+    
+    <!-- Tool Header -->
+    <div class="text-center mb-12">
+      <h1 id="toolTitle" class="font-display text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+        Tool Name
+      </h1>
+      <p id="toolDescription" class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        Free browser-based tool. Process files instantly without uploading to servers.
+      </p>
+    </div>
+    
+    <!-- Tool Interface -->
+    <div class="max-w-3xl mx-auto">
+      
+      <!-- Upload Area -->
+      <div id="uploadArea" class="upload-area glass-card rounded-2xl p-12 text-center cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-primary transition-all">
+        <input type="file" id="fileInput" class="hidden" multiple />
+        
+        <div class="space-y-4">
+          <div class="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-4xl animate-float">
+            📁
+          </div>
+          
+          <div>
+            <p class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Drop files here or click to upload
+            </p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Supports drag & drop, click upload, and paste from clipboard
+            </p>
+          </div>
+          
+          <div class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Drag & Drop</span>
+            <span>•</span>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Click Upload</span>
+            <span>•</span>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">Paste (Ctrl+V)</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Preview Container -->
+      <div id="previewContainer" class="hidden mt-8">
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Selected Files</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+      </div>
+      
+      <!-- Settings Panel -->
+      <div id="settingsContainer" class="hidden mt-8 glass-card rounded-xl p-6">
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Settings</h3>
+        <div class="space-y-4"></div>
+      </div>
+      
+      <!-- Process Button -->
+      <div id="processBtn" class="hidden mt-8">
+        <button class="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5">
+          Process Files
+        </button>
+      </div>
+      
+      <!-- Progress Section -->
+      <div id="progressSection" class="hidden mt-8">
+        <div class="glass-card rounded-xl p-6">
+          <div class="flex items-center justify-between mb-2">
+            <span id="progressText" class="text-sm font-medium text-gray-600 dark:text-gray-400">Processing...</span>
+            <span id="progressPercent" class="text-sm font-medium text-primary">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+            <div id="progressBar" class="progress-bar h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Download Section -->
+      <div id="downloadSection" class="hidden mt-8">
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">✅ Processing Complete!</h3>
+          <div class="space-y-3"></div>
+          <button onclick="ToolEngine.reset()" class="mt-6 w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            Process Another File
+          </button>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- Related Tools -->
+    <div id="relatedTools" class="mt-16"></div>
+    
+    <!-- Related Guides -->
+    <div id="relatedGuides" class="mt-16"></div>
+    
+    <!-- FAQ Section -->
+    <div class="mt-16 max-w-3xl mx-auto">
+      <h2 class="font-display text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+        Frequently Asked Questions
+      </h2>
+      <div id="faqContainer" class="space-y-4">
+        <!-- FAQs injected dynamically -->
+      </div>
+    </div>
+    
+  </main>
+  
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 dark:border-gray-800 mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Tools</h4>
+          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <li><a href="/tools/pdf/" class="hover:text-primary">PDF Tools</a></li>
+            <li><a href="/tools/image/" class="hover:text-primary">Image Tools</a></li>
+            <li><a href="/tools/compression/" class="hover:text-primary">Compression</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Resources</h4>
+          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <li><a href="/guides/" class="hover:text-primary">Guides</a></li>
+            <li><a href="/about.html" class="hover:text-primary">About</a></li>
+            <li><a href="/contact.html" class="hover:text-primary">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <li><a href="/legal/privacy-policy.html" class="hover:text-primary">Privacy Policy</a></li>
+            <li><a href="/legal/terms-of-service.html" class="hover:text-primary">Terms of Service</a></li>
+            <li><a href="/legal/cookie-policy.html" class="hover:text-primary">Cookie Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Connect</h4>
+          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <li><a href="#" class="hover:text-primary">Twitter</a></li>
+            <li><a href="#" class="hover:text-primary">GitHub</a></li>
+            <li><a href="#" class="hover:text-primary">Discord</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p>© 2024 BrowserTools. All rights reserved. 100% browser-based processing.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+  
+  <!-- Core Scripts -->
+  <script src="/js/core/utils.js"></script>
+  <script src="/js/core/app.js"></script>
+  <script src="/js/core/upload-engine.js"></script>
+  <script src="/js/core/worker-manager.js"></script>
+  <script src="/js/core/tool-engine.js"></script>
+  <script src="/js/core/download-engine.js"></script>
+  <script src="/js/ui/components.js"></script>
+  <script src="/js/seo/seo-engine.js"></script>
+  <script src="/js/seo/internal-links.js"></script>
+  
+  <!-- Tool Initialization Script -->
+  <script>
+    // Tool configuration
+    const TOOL_CONFIG = {
+      id: 'TOOL_ID_PLACEHOLDER',
+      name: 'Tool Name',
+      category: 'image',
+      description: 'Free browser-based tool.',
+      keywords: ['tool', 'browser', 'free'],
+      faqs: [
+        { question: 'Is this tool free?', answer: 'Yes, this tool is completely free to use.' },
+        { question: 'Are my files uploaded to a server?', answer: 'No, all processing happens in your browser. Your files never leave your device.' },
+        { question: 'What file types are supported?', answer: 'This tool supports common file formats. Check the upload area for specific formats.' }
+      ]
+    };
+    
+    // Initialize app and tool
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize core
+      await App.init();
+      
+      // Update page with tool info
+      document.getElementById('toolTitle').textContent = TOOL_CONFIG.name;
+      document.title = `${TOOL_CONFIG.name} - BrowserTools`;
+      document.getElementById('toolDescription').textContent = TOOL_CONFIG.description;
+      
+      // Generate and inject SEO
+      const seo = SEOEngine.generateToolSEO(TOOL_CONFIG);
+      SEOEngine.inject(seo);
+      
+      // Inject internal links
+      InternalLinks.injectIntoPage(TOOL_CONFIG.id);
+      
+      // Inject FAQs
+      const faqContainer = document.getElementById('faqContainer');
+      if (faqContainer && TOOL_CONFIG.faqs) {
+        faqContainer.innerHTML = TOOL_CONFIG.faqs.map(faq => `
+          <details class="group glass-card rounded-xl">
+            <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
+              <span class="font-medium text-gray-900 dark:text-white">${faq.question}</span>
+              <span class="text-primary group-open:rotate-45 transition-transform">+</span>
+            </summary>
+            <div class="px-4 pb-4 text-gray-600 dark:text-gray-400">${faq.answer}</div>
+          </details>
+        `).join('');
+      }
+      
+      // Initialize tool engine
+      await ToolEngine.init(TOOL_CONFIG.id);
+      
+      // Theme toggle
+      const themeToggle = document.getElementById('themeToggle');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          document.documentElement.classList.toggle('dark');
+          const isDark = document.documentElement.classList.contains('dark');
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          themeToggle.textContent = isDark ? '☀️' : '🌙';
+        });
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+          themeToggle.textContent = '☀️';
+        }
+      }
+    });
+  </script>
+  
+  <!-- JSON-LD Schema -->
+  <script type="application/ld+json" id="toolSchema"></script>
+  
+</body>
+</html>
