@@ -1,94 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- How-to Guides -->
   <url>
-    <loc>https://yourdomain.com/guides/how-to-compress-image-to-20kb.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-compress-image-to-20kb.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-compress-image-to-50kb.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-compress-image-to-50kb.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-compress-image-to-100kb.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-convert-jpg-to-png.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-convert-jpg-to-png.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-convert-png-to-jpg.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-convert-png-to-jpg.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-resize-image-for-instagram.html</loc>
+    <lastmod>2024-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://YOURDOMAIN.com/guides/how-to-resize-image-for-facebook.html</loc>
+    <lastmod>2024-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://YOURDOMAIN.com/guides/how-to-merge-pdf-files.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-convert-pdf-to-jpg.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-split-pdf.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.65</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-merge-pdf-files.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-compress-pdf.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.65</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-split-pdf.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/how-to-convert-pdf-to-jpg.html</loc>
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.65</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/how-to-compress-pdf.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/best-image-formats-for-web.html</loc>
     <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://yourdomain.com/guides/how-to-resize-image.html</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://yourdomain.com/guides/how-to-create-youtube-thumbnail.html</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://yourdomain.com/guides/how-to-resize-image-for-instagram.html</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://yourdomain.com/guides/best-image-formats-for-web.html</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>quarterly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://yourdomain.com/guides/pdf-vs-word-when-to-use.html</loc>
+    <loc>https://YOURDOMAIN.com/guides/pdf-vs-docx-which-is-better.html</loc>
     <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://yourdomain.com/guides/image-compression-guide.html</loc>
-    <lastmod>2024-01-15</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>quarterly</changefreq>
     <priority>0.6</priority>
   </url>
 </urlset>
